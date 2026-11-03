@@ -61,7 +61,6 @@ function saveData() {
 
 function cleanup30DaysOld() {
   const now = Date.now();
-  const initialCount = einsatze.length;
   einsatze = einsatze.filter(item => {
     const effective = item.datumMillis || item.createdAt || now;
     return (now - effective) <= THIRTY_DAYS_MS;
@@ -221,6 +220,54 @@ function cycleStatus(id) {
   saveData();
 }
 
+function saveManualEntry() {
+  const datumStr = document.getElementById('m-datum').value.trim();
+  const abZeit = document.getElementById('m-abzeit').value.trim();
+  const anZeit = document.getElementById('m-anzeit').value.trim();
+  const abBahnhof = document.getElementById('m-abbhf').value.trim();
+  const anBahnhof = document.getElementById('m-anbhf').value.trim();
+  const tourNr = document.getElementById('m-tour').value.trim();
+  const linie = document.getElementById('m-linie').value.trim();
+  const honorarVal = document.getElementById('m-honorar').value.trim();
+
+  if (!datumStr && !abBahnhof) {
+    alert('Bitte mindestens Datum oder Bahnhof eingeben.');
+    return;
+  }
+
+  const euroClean = parseFloat(honorarVal.replace(/[^\d,.+]/g, '').replace(',', '.')) || 0;
+
+  const newItem = {
+    id: 'man_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+    datumStr: datumStr,
+    datumMillis: parseGermanDateToMillis(datumStr),
+    abZeit: abZeit,
+    abBahnhof: abBahnhof,
+    anZeit: anZeit,
+    anBahnhof: anBahnhof,
+    tourNr: tourNr,
+    linie: linie,
+    betragEuro: euroClean,
+    status: 'OFFEN',
+    createdAt: Date.now()
+  };
+
+  einsatze.push(newItem);
+  saveData();
+
+  // Reset fields
+  document.getElementById('m-datum').value = '';
+  document.getElementById('m-abzeit').value = '';
+  document.getElementById('m-anzeit').value = '';
+  document.getElementById('m-abbhf').value = '';
+  document.getElementById('m-anbhf').value = '';
+  document.getElementById('m-tour').value = '';
+  document.getElementById('m-linie').value = '';
+  document.getElementById('m-honorar').value = '';
+
+  closeModal('manual-modal');
+}
+
 function deleteItem(id) {
   if (confirm("Diesen Einsatz löschen?")) {
     einsatze = einsatze.filter(i => i.id !== id);
@@ -350,6 +397,20 @@ function setStatusFilter(status) {
 function onSearchInput(val) {
   searchQuery = val;
   renderList();
+}
+
+function requestNotificationPermission() {
+  if ('Notification' in window) {
+    Notification.requestPermission().then(permission => {
+      if (permission === 'granted') {
+        alert('Erinnerungen für iPhone / Safari aktiviert! (iOS 16.4+)');
+      } else {
+        alert('Benachrichtigungen wurden im Browser abgelehnt.');
+      }
+    });
+  } else {
+    alert('Benachrichtigungen werden von diesem Browser nicht unterstützt. Bitte füge die App zuerst zum Home-Bildschirm hinzu.');
+  }
 }
 
 function registerServiceWorker() {
