@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   loadData();
   registerServiceWorker();
+  checkNotificationPermission();
   renderApp();
 });
 
@@ -399,11 +400,19 @@ function onSearchInput(val) {
   renderList();
 }
 
+function checkNotificationPermission() {
+  const btn = document.getElementById('notif-btn');
+  if (btn && 'Notification' in window && Notification.permission === 'granted') {
+    btn.style.display = 'none';
+  }
+}
+
 function requestNotificationPermission() {
   if ('Notification' in window) {
     Notification.requestPermission().then(permission => {
       if (permission === 'granted') {
-        alert('Erinnerungen für iPhone / Safari aktiviert! (iOS 16.4+)');
+        checkNotificationPermission();
+        alert('Erinnerungen für iPhone / Safari aktiviert!');
       } else {
         alert('Benachrichtigungen wurden im Browser abgelehnt.');
       }
