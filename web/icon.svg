@@ -1,12 +1,29 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <rect width="512" height="512" rx="115" fill="#0F172A"/>
-  <path d="M0,0 L512,512 L0,512 Z" fill="#1E293B"/>
-  <circle cx="256" cy="256" r="190" fill="#1E3A8A" opacity="0.3"/>
-  <rect x="150" y="110" width="212" height="270" rx="35" fill="#38BDF8"/>
-  <rect x="170" y="140" width="172" height="85" rx="12" fill="#0F172A"/>
-  <circle cx="190" cy="320" r="18" fill="#F59E0B"/>
-  <circle cx="322" cy="320" r="18" fill="#F59E0B"/>
-  <polygon points="175,380 140,430 180,430 200,380" fill="#FFFFFF"/>
-  <polygon points="337,380 312,380 332,430 372,430" fill="#FFFFFF"/>
-  <polygon points="380,80 390,105 415,115 390,125 380,150 370,125 345,115 370,105" fill="#10B981"/>
+  <!-- Dark Obsidian Squircle -->
+  <rect width="512" height="512" rx="115" fill="#0B0F17"/>
+  <path d="M0,0 L512,512 L0,512 Z" fill="#161F33"/>
+  <circle cx="256" cy="256" r="180" fill="#1E3A8A" opacity="0.35"/>
+
+  <!-- High Speed Bullet Train Body -->
+  <path d="M256,120 C195,120 155,150 155,190 L155,330 C155,350 170,360 195,360 L317,360 C342,360 357,350 357,330 L357,190 C357,150 317,120 256,120 Z" fill="#06B6D4"/>
+
+  <!-- Aerodynamic Windshield -->
+  <path d="M175,170 C195,150 235,145 256,145 C277,145 317,150 337,170 L327,220 L185,220 Z" fill="#0B0F17"/>
+
+  <!-- Speed Motion Lines -->
+  <path d="M100,210 L135,210 L125,225 L90,225 Z" fill="#38BDF8"/>
+  <path d="M80,250 L125,250 L115,265 L70,265 Z" fill="#38BDF8"/>
+  <path d="M377,210 L412,210 L402,225 L367,225 Z" fill="#38BDF8"/>
+  <path d="M387,250 L432,250 L422,265 L377,265 Z" fill="#38BDF8"/>
+
+  <!-- Headlights -->
+  <circle cx="195" cy="310" r="16" fill="#F59E0B"/>
+  <circle cx="317" cy="310" r="16" fill="#F59E0B"/>
+
+  <!-- Tracks -->
+  <polygon points="185,360 155,410 185,410 205,360" fill="#FFFFFF"/>
+  <polygon points="327,360 307,360 327,410 357,410" fill="#FFFFFF"/>
+
+  <!-- AI Sparkle Badge -->
+  <polygon points="370,80 382,110 412,122 382,134 370,164 358,134 328,122 358,110" fill="#10B981"/>
 </svg>

@@ -4,30 +4,53 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Train / Transit Body -->
+    <!-- Futuristic Bullet Train Body (Electric Cyan-Blue) -->
+    <path
+        android:fillColor="#06B6D4"
+        android:pathData="M54,28 C42,28 34,34 34,42 L34,70 C34,74 37,76 42,76 L66,76 C71,76 74,74 74,70 L74,42 C74,34 66,28 54,28 Z" />
+
+    <!-- Sleek Aerodynamic Windshield -->
+    <path
+        android:fillColor="#0B0F17"
+        android:pathData="M38,38 C42,34 50,33 54,33 C58,33 66,34 70,38 L68,48 L40,48 Z" />
+
+    <!-- High-Speed Motion Lines (Left & Right) -->
     <path
         android:fillColor="#38BDF8"
-        android:pathData="M38,28 C34,28 32,30 32,34 L32,68 C32,72 34,74 38,74 L70,74 C74,74 76,72 76,68 L76,34 C76,30 74,28 70,28 L38,28 Z" />
-    <!-- Windshield -->
+        android:pathData="M24,46 L30,46 L28,49 L22,49 Z" />
     <path
-        android:fillColor="#0F172A"
-        android:pathData="M36,34 L72,34 L72,48 L36,48 Z" />
-    <!-- Headlights -->
+        android:fillColor="#38BDF8"
+        android:pathData="M20,54 L28,54 L26,57 L18,57 Z" />
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M80,46 L86,46 L84,49 L78,49 Z" />
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M82,54 L90,54 L88,57 L80,57 Z" />
+
+    <!-- Headlights (Glowing Amber Gold) -->
     <path
         android:fillColor="#F59E0B"
-        android:pathData="M38,62 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+        android:pathData="M42,66 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
     <path
         android:fillColor="#F59E0B"
-        android:pathData="M70,62 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
-    <!-- Track Wheels / Stand -->
+        android:pathData="M66,66 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+
+    <!-- Center Euro Track Badge -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M38,74 L32,84 L38,84 L42,74 Z" />
+        android:pathData="M50,56 C48,56 46,58 46,60 C46,62 48,64 50,64 C52,64 53,63 54,62 L57,64 C55,66 53,67 50,67 C45,67 42,64 42,60 C42,56 45,53 50,53 C53,53 55,54 57,56 L54,58 C53,57 52,56 50,56 Z M44,58 L54,58 M44,61 L54,61" />
+
+    <!-- Tracks Underneath -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M70,74 L66,74 L70,84 L76,84 Z" />
-    <!-- AI Sparkle Badge Top Right -->
+        android:fillColor="#E2E8F0"
+        android:pathData="M40,76 L34,84 L40,84 L44,76 Z" />
+    <path
+        android:fillColor="#E2E8F0"
+        android:pathData="M68,76 L64,76 L68,84 L74,84 Z" />
+
+    <!-- AI Sparkle Badge (Top Right Glowing Emerald) -->
     <path
         android:fillColor="#10B981"
-        android:pathData="M74,22 L76,27 L81,29 L76,31 L74,36 L72,31 L67,29 L72,27 Z" />
+        android:pathData="M76,20 L78,25 L83,27 L78,29 L76,34 L74,29 L69,27 L74,25 Z" />
 </vector>
