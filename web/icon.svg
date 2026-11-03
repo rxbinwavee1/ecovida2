@@ -1,29 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <!-- Dark Obsidian Squircle -->
-  <rect width="512" height="512" rx="115" fill="#0B0F17"/>
-  <path d="M0,0 L512,512 L0,512 Z" fill="#161F33"/>
-  <circle cx="256" cy="256" r="180" fill="#1E3A8A" opacity="0.35"/>
+  <!-- Dark Obsidian Container -->
+  <rect width="512" height="512" rx="115" fill="#090D16"/>
+  <path d="M0,0 L512,512 L0,512 Z" fill="#111827"/>
+  <circle cx="256" cy="256" r="190" fill="#1D2A44" opacity="0.4"/>
 
-  <!-- High Speed Bullet Train Body -->
-  <path d="M256,120 C195,120 155,150 155,190 L155,330 C155,350 170,360 195,360 L317,360 C342,360 357,350 357,330 L357,190 C357,150 317,120 256,120 Z" fill="#06B6D4"/>
+  <!-- Outer Transit Glow Arc -->
+  <path d="M110,256 C110,175.5 175.5,110 256,110 C336.5,110 402,175.5 402,256 L367,256 C367,194.7 317.3,145 256,145 C194.7,145 145,194.7 145,256 Z" fill="#06B6D4"/>
 
-  <!-- Aerodynamic Windshield -->
-  <path d="M175,170 C195,150 235,145 256,145 C277,145 317,150 337,170 L327,220 L185,220 Z" fill="#0B0F17"/>
+  <!-- Stylized Letter E -->
+  <path d="M145,190 L235,190 L235,215 L175,215 L175,245 L225,245 L225,270 L175,270 L175,300 L235,300 L235,325 L145,325 Z" fill="#10B981"/>
 
-  <!-- Speed Motion Lines -->
-  <path d="M100,210 L135,210 L125,225 L90,225 Z" fill="#38BDF8"/>
-  <path d="M80,250 L125,250 L115,265 L70,265 Z" fill="#38BDF8"/>
-  <path d="M377,210 L412,210 L402,225 L367,225 Z" fill="#38BDF8"/>
-  <path d="M387,250 L432,250 L422,265 L377,265 Z" fill="#38BDF8"/>
+  <!-- Stylized Letter V -->
+  <path d="M250,190 L285,190 L320,300 L355,190 L390,190 L335,325 L305,325 Z" fill="#38BDF8"/>
 
-  <!-- Headlights -->
-  <circle cx="195" cy="310" r="16" fill="#F59E0B"/>
-  <circle cx="317" cy="310" r="16" fill="#F59E0B"/>
+  <!-- "EcoVida" Text Subbar Line -->
+  <rect x="135" y="355" width="255" height="12" rx="6" fill="#FFFFFF"/>
 
-  <!-- Tracks -->
-  <polygon points="185,360 155,410 185,410 205,360" fill="#FFFFFF"/>
-  <polygon points="327,360 307,360 327,410 357,410" fill="#FFFFFF"/>
+  <!-- EcoVida Text Label -->
+  <text x="256" y="415" font-family="-apple-system, Roboto, sans-serif" font-size="44" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="4">ECOVIDA</text>
 
   <!-- AI Sparkle Badge -->
-  <polygon points="370,80 382,110 412,122 382,134 370,164 358,134 328,122 358,110" fill="#10B981"/>
+  <polygon points="390,80 402,110 432,122 402,134 390,164 378,134 348,122 378,110" fill="#F59E0B"/>
 </svg>

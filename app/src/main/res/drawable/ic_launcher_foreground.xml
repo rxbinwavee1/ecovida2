@@ -4,53 +4,35 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Futuristic Bullet Train Body (Electric Cyan-Blue) -->
+
+    <!-- Glowing Outer Arc Shield -->
     <path
         android:fillColor="#06B6D4"
-        android:pathData="M54,28 C42,28 34,34 34,42 L34,70 C34,74 37,76 42,76 L66,76 C71,76 74,74 74,70 L74,42 C74,34 66,28 54,28 Z" />
+        android:pathData="M28,54 C28,39.6 39.6,28 54,28 C68.4,28 80,39.6 80,54 L74,54 C74,42.9 65.1,34 54,34 C42.9,34 34,42.9 34,54 L28,54 Z" />
 
-    <!-- Sleek Aerodynamic Windshield -->
-    <path
-        android:fillColor="#0B0F17"
-        android:pathData="M38,38 C42,34 50,33 54,33 C58,33 66,34 70,38 L68,48 L40,48 Z" />
-
-    <!-- High-Speed Motion Lines (Left & Right) -->
-    <path
-        android:fillColor="#38BDF8"
-        android:pathData="M24,46 L30,46 L28,49 L22,49 Z" />
-    <path
-        android:fillColor="#38BDF8"
-        android:pathData="M20,54 L28,54 L26,57 L18,57 Z" />
-    <path
-        android:fillColor="#38BDF8"
-        android:pathData="M80,46 L86,46 L84,49 L78,49 Z" />
-    <path
-        android:fillColor="#38BDF8"
-        android:pathData="M82,54 L90,54 L88,57 L80,57 Z" />
-
-    <!-- Headlights (Glowing Amber Gold) -->
-    <path
-        android:fillColor="#F59E0B"
-        android:pathData="M42,66 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
-    <path
-        android:fillColor="#F59E0B"
-        android:pathData="M66,66 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
-
-    <!-- Center Euro Track Badge -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M50,56 C48,56 46,58 46,60 C46,62 48,64 50,64 C52,64 53,63 54,62 L57,64 C55,66 53,67 50,67 C45,67 42,64 42,60 C42,56 45,53 50,53 C53,53 55,54 57,56 L54,58 C53,57 52,56 50,56 Z M44,58 L54,58 M44,61 L54,61" />
-
-    <!-- Tracks Underneath -->
-    <path
-        android:fillColor="#E2E8F0"
-        android:pathData="M40,76 L34,84 L40,84 L44,76 Z" />
-    <path
-        android:fillColor="#E2E8F0"
-        android:pathData="M68,76 L64,76 L68,84 L74,84 Z" />
-
-    <!-- AI Sparkle Badge (Top Right Glowing Emerald) -->
+    <!-- "EV" EcoVida Stylized Emblem -->
+    <!-- Letter E -->
     <path
         android:fillColor="#10B981"
-        android:pathData="M76,20 L78,25 L83,27 L78,29 L76,34 L74,29 L69,27 L74,25 Z" />
+        android:pathData="M34,42 L48,42 L48,46 L38,46 L38,52 L46,52 L46,56 L38,56 L38,62 L48,62 L48,66 L34,66 Z" />
+
+    <!-- Letter V -->
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M50,42 L55,42 L61,60 L67,42 L72,42 L63,66 L59,66 Z" />
+
+    <!-- "EcoVida" Brand Text Sub-Bar -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M32,71 L76,71 L76,73 L32,73 Z" />
+
+    <!-- Transit Speed Dot -->
+    <path
+        android:fillColor="#F59E0B"
+        android:pathData="M78,54 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+
+    <!-- AI Sparkle Badge Top Right -->
+    <path
+        android:fillColor="#F59E0B"
+        android:pathData="M78,22 L80,27 L85,29 L80,31 L78,36 L76,31 L71,29 L76,27 Z" />
 </vector>
