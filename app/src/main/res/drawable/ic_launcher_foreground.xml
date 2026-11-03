@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Train / Transit Body -->
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M38,28 C34,28 32,30 32,34 L32,68 C32,72 34,74 38,74 L70,74 C74,74 76,72 76,68 L76,34 C76,30 74,28 70,28 L38,28 Z" />
+    <!-- Windshield -->
+    <path
+        android:fillColor="#0F172A"
+        android:pathData="M36,34 L72,34 L72,48 L36,48 Z" />
+    <!-- Headlights -->
+    <path
+        android:fillColor="#F59E0B"
+        android:pathData="M38,62 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+    <path
+        android:fillColor="#F59E0B"
+        android:pathData="M70,62 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+    <!-- Track Wheels / Stand -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M38,74 L32,84 L38,84 L42,74 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M70,74 L66,74 L70,84 L76,84 Z" />
+    <!-- AI Sparkle Badge Top Right -->
+    <path
+        android:fillColor="#10B981"
+        android:pathData="M74,22 L76,27 L81,29 L76,31 L74,36 L72,31 L67,29 L72,27 Z" />
+</vector>
