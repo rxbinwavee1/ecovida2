@@ -71,12 +71,11 @@ function cleanup30DaysOld() {
 // Date Parsing Helper
 function parseGermanDateToMillis(dateStr) {
   if (!dateStr) return Date.now();
-  const clean = dateStr.replace(/^[A-Za-z]{2},\s*/, '').trim();
-  const parts = clean.split('.');
-  if (parts.length === 3) {
-    const day = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10) - 1;
-    const year = parseInt(parts[2], 10);
+  const match = dateStr.match(/\b(\d{1,2})\.(\d{1,2})\.(\d{4})\b/);
+  if (match) {
+    const day = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10) - 1;
+    const year = parseInt(match[3], 10);
     return new Date(year, month, day).getTime();
   }
   return Date.now();
