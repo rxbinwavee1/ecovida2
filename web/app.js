@@ -91,7 +91,7 @@ function renderApp() {
 function renderStats() {
   const activeItems = einsatze.filter(i => i.status !== 'ABGESCHLOSSEN');
   const totalSum = einsatze
-    .filter(i => i.status === 'OFFEN' || i.status === 'ABGESCHLOSSEN')
+    .filter(i => i.status !== 'ABGEBROCHEN')
     .reduce((sum, item) => sum + (parseFloat(item.betragEuro) || 0), 0);
 
   document.getElementById('total-earnings').textContent = totalSum.toFixed(2).replace('.', ',') + ' €';
@@ -358,20 +358,34 @@ function openRescheduleModal(id) {
   rescheduleTargetId = id;
   const item = einsatze.find(i => i.id === id);
   if (item) {
-    document.getElementById('reschedule-date-input').value = item.datumStr;
     document.getElementById('reschedule-modal').style.display = 'flex';
   }
 }
 
 function saveReschedule() {
-  const newDate = document.getElementById('reschedule-date-input').value;
-  if (newDate && rescheduleTargetId) {
-    const item = einsatze.find(i => i.id === rescheduleTargetId);
-    if (item) {
-      item.datumStr = newDate;
-      item.datumMillis = parseGermanDateToMillis(newDate);
-      item.status = 'VERSCHOBEN';
-      saveData();
+  const rawDate = document.getElementById('reschedule-date-input').value; // YYYY-MM-DD
+  if (rawDate && rescheduleTargetId) {
+    const parts = rawDate.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const d = new Date(year, month, day);
+
+      const days = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+      const dayName = days[d.getDay()];
+      const dayStr = String(d.getDate()).padStart(2, '0');
+      const monthStr = String(d.getMonth() + 1).padStart(2, '0');
+      const yearStr = d.getFullYear();
+      const formattedGermanDate = `${dayName}, ${dayStr}.${monthStr}.${yearStr}`;
+
+      const item = einsatze.find(i => i.id === rescheduleTargetId);
+      if (item) {
+        item.datumStr = formattedGermanDate;
+        item.datumMillis = d.getTime();
+        item.status = 'VERSCHOBEN';
+        saveData();
+      }
     }
   }
   closeModal('reschedule-modal');

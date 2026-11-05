@@ -32,7 +32,7 @@ class EinsatzViewModel(private val repository: EinsatzRepository) : ViewModel() 
             repository.refresh()
             repository.einsatzeFlow.collect { list ->
                 val autoDeleted = repository.lastDeletedCount.value
-                val totalSum = list.filter { it.status == EinsatzStatus.ABGESCHLOSSEN || it.status == EinsatzStatus.OFFEN }
+                val totalSum = list.filter { it.status != EinsatzStatus.ABGEBROCHEN }
                     .sumOf { it.betragEuro }
                 _uiState.update { state ->
                     val filtered = applyFilter(list, state.activeTab, state.searchQuery, state.selectedStatusFilter)
