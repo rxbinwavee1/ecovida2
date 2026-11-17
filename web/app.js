@@ -42,8 +42,35 @@ function applyTheme() {
 }
 
 // Data Persistence & 30-Day Auto Cleanup
+const AUTODELETE_KEY = 'econex_planer_autodelete';
+let isAutoDeleteEnabled = true;
+
+function toggleAutoDelete() {
+  isAutoDeleteEnabled = !isAutoDeleteEnabled;
+  localStorage.setItem(AUTODELETE_KEY, isAutoDeleteEnabled ? 'true' : 'false');
+  updateAutoDeleteBtn();
+  if (isAutoDeleteEnabled) {
+    saveData();
+    alert('30-Tage Auto-Löschung aktiviert ⏱️');
+  } else {
+    alert('30-Tage Auto-Löschung deaktiviert ⏸️');
+  }
+}
+
+function updateAutoDeleteBtn() {
+  const btn = document.getElementById('autodelete-btn');
+  if (btn) {
+    btn.style.opacity = isAutoDeleteEnabled ? '1.0' : '0.35';
+    btn.title = isAutoDeleteEnabled ? '30-Tage Auto-Löschung: AKTIV (Tippen zum Deaktivieren)' : '30-Tage Auto-Löschung: DEAKTIVIERT (Tippen zum Aktivieren)';
+  }
+}
+
 function loadData() {
   try {
+    const savedAutoDelete = localStorage.getItem(AUTODELETE_KEY);
+    isAutoDeleteEnabled = savedAutoDelete !== 'false';
+    updateAutoDeleteBtn();
+
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       einsatze = JSON.parse(raw);
@@ -61,6 +88,7 @@ function saveData() {
 }
 
 function cleanup30DaysOld() {
+  if (!isAutoDeleteEnabled) return;
   const now = Date.now();
   einsatze = einsatze.filter(item => {
     const effective = item.datumMillis || item.createdAt || now;

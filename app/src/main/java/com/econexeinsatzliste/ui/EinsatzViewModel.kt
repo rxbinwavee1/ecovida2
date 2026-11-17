@@ -29,7 +29,7 @@ class EinsatzViewModel(private val repository: EinsatzRepository) : ViewModel() 
     fun loadEinsatze() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            repository.refresh()
+            repository.refresh(_uiState.value.isAutoDeleteEnabled)
             repository.einsatzeFlow.collect { list ->
                 val autoDeleted = repository.lastDeletedCount.value
                 val totalSum = list.filter { it.status != EinsatzStatus.ABGEBROCHEN }
@@ -46,6 +46,17 @@ class EinsatzViewModel(private val repository: EinsatzRepository) : ViewModel() 
                 }
             }
         }
+    }
+
+    fun toggleAutoDelete() {
+        _uiState.update { state ->
+            val nextState = !state.isAutoDeleteEnabled
+            state.copy(
+                isAutoDeleteEnabled = nextState,
+                userMessage = if (nextState) "30-Tage Auto-Löschung aktiviert ⏱️" else "30-Tage Auto-Löschung deaktiviert ⏸️"
+            )
+        }
+        loadEinsatze()
     }
 
     fun toggleDarkTheme() {
@@ -172,7 +183,7 @@ class EinsatzViewModel(private val repository: EinsatzRepository) : ViewModel() 
     fun confirmParsedEinsatze(context: Context, confirmedList: List<Einsatz>) {
         viewModelScope.launch {
             if (confirmedList.isNotEmpty()) {
-                val addedCount = repository.insertAll(confirmedList)
+                val addedCount = repository.insertAll(confirmedList, _uiState.value.isAutoDeleteEnabled)
                 confirmedList.forEach { einsatz ->
                     if (einsatz.status != EinsatzStatus.ABGESCHLOSSEN) {
                         EinsatzNotificationHelper.scheduleTourMorningReminder(context, einsatz)
@@ -193,7 +204,7 @@ class EinsatzViewModel(private val repository: EinsatzRepository) : ViewModel() 
     fun toggleEinsatzStatus(context: Context, einsatz: Einsatz, newStatus: EinsatzStatus) {
         viewModelScope.launch {
             val updated = einsatz.copy(status = newStatus)
-            repository.updateEinsatz(updated)
+            repository.updateEinsatz(updated, _uiState.value.isAutoDeleteEnabled)
 
             if (newStatus == EinsatzStatus.ABGESCHLOSSEN) {
                 EinsatzNotificationHelper.cancelReminder(context, einsatz.id)
@@ -217,7 +228,7 @@ class EinsatzViewModel(private val repository: EinsatzRepository) : ViewModel() 
                 datumMillis = newMillis,
                 status = EinsatzStatus.VERSCHOBEN
             )
-            repository.updateEinsatz(updated)
+            repository.updateEinsatz(updated, _uiState.value.isAutoDeleteEnabled)
             EinsatzNotificationHelper.scheduleTourMorningReminder(context, updated)
             _uiState.update {
                 it.copy(userMessage = "Einsatz auf $newDateStr verschoben & neu eingeordnet!")
@@ -228,14 +239,14 @@ class EinsatzViewModel(private val repository: EinsatzRepository) : ViewModel() 
     fun saveEinsatz(context: Context, einsatz: Einsatz) {
         viewModelScope.launch {
             if (einsatz.id == 0L) {
-                val id = repository.insertEinsatz(einsatz)
+                val id = repository.insertEinsatz(einsatz, _uiState.value.isAutoDeleteEnabled)
                 val created = einsatz.copy(id = id)
                 if (created.status != EinsatzStatus.ABGESCHLOSSEN) {
                     EinsatzNotificationHelper.scheduleTourMorningReminder(context, created)
                 }
                 _uiState.update { it.copy(userMessage = "Einsatz hinzugefügt!") }
             } else {
-                repository.updateEinsatz(einsatz)
+                repository.updateEinsatz(einsatz, _uiState.value.isAutoDeleteEnabled)
                 if (einsatz.status != EinsatzStatus.ABGESCHLOSSEN) {
                     EinsatzNotificationHelper.scheduleTourMorningReminder(context, einsatz)
                 } else {
@@ -249,7 +260,7 @@ class EinsatzViewModel(private val repository: EinsatzRepository) : ViewModel() 
     fun deleteEinsatz(context: Context, id: Long) {
         viewModelScope.launch {
             EinsatzNotificationHelper.cancelReminder(context, id)
-            repository.deleteEinsatz(id)
+            repository.deleteEinsatz(id, _uiState.value.isAutoDeleteEnabled)
             _uiState.update { it.copy(userMessage = "Einsatz gelöscht.") }
         }
     }

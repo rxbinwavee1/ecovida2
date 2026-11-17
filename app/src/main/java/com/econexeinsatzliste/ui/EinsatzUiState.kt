@@ -13,6 +13,7 @@ data class EinsatzUiState(
     val filteredEinsatze: List<Einsatz> = emptyList(),
     val activeTab: EinsatzTab = EinsatzTab.AKTIV,
     val isDarkTheme: Boolean = true,
+    val isAutoDeleteEnabled: Boolean = true,
     val isLoading: Boolean = false,
     val isParsingScreenshot: Boolean = false,
     val isParsingCsv: Boolean = false,

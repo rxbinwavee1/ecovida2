@@ -33,6 +33,7 @@ import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.AutoDelete
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Delete
@@ -149,6 +150,13 @@ fun EinsatzAppScreen(
                     )
                 },
                 actions = {
+                    IconButton(onClick = { viewModel.toggleAutoDelete() }) {
+                        Icon(
+                            imageVector = Icons.Default.AutoDelete,
+                            contentDescription = "30-Tage Auto-Löschung umschalten",
+                            tint = if (uiState.isAutoDeleteEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                        )
+                    }
                     IconButton(onClick = { viewModel.toggleDarkTheme() }) {
                         AnimatedContent(
                             targetState = uiState.isDarkTheme,

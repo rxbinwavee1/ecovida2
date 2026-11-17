@@ -122,8 +122,10 @@ class EconexDatabaseHelper(context: Context) :
         return rows > 0
     }
 
-    fun getAllEinsatze(): List<Einsatz> {
-        deleteEntriesOlderThan30Days()
+    fun getAllEinsatze(isAutoDeleteEnabled: Boolean = true): List<Einsatz> {
+        if (isAutoDeleteEnabled) {
+            deleteEntriesOlderThan30Days()
+        }
         val list = mutableListOf<Einsatz>()
         val db = readableDatabase
         val cursor = db.query(
