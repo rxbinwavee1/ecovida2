@@ -532,6 +532,8 @@ function requestNotificationPermission() {
 
 function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').catch(e => console.log(e));
+    navigator.serviceWorker.register('./sw.js?v=5').then(reg => {
+      reg.update();
+    }).catch(e => console.log(e));
   }
 }
