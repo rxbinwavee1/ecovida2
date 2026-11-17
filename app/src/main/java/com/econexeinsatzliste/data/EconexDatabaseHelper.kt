@@ -10,7 +10,7 @@ class EconexDatabaseHelper(context: Context) :
 
     companion object {
         private const val DATABASE_NAME = "econex_einsatz.db"
-        private const val DATABASE_VERSION = 6
+        private const val DATABASE_VERSION = 10
 
         const val TABLE_EINSATZ = "einsatz"
         const val COLUMN_ID = "id"
@@ -56,6 +56,11 @@ class EconexDatabaseHelper(context: Context) :
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        db.execSQL("DROP TABLE IF EXISTS $TABLE_EINSATZ")
+        onCreate(db)
+    }
+
+    override fun onDowngrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         db.execSQL("DROP TABLE IF EXISTS $TABLE_EINSATZ")
         onCreate(db)
     }

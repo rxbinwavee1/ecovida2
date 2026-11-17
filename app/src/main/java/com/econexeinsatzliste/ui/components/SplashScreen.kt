@@ -65,11 +65,11 @@ fun SplashScreen(
                 shadowElevation = 12.dp
             ) {
                 Image(
-                    painter = painterResource(id = R.mipmap.ic_launcher),
+                    painter = painterResource(id = R.drawable.ic_launcher_foreground),
                     contentDescription = "Econex Planer Logo",
                     modifier = Modifier
                         .size(130.dp)
-                        .padding(16.dp)
+                        .padding(12.dp)
                 )
             }
 
@@ -89,18 +89,16 @@ fun SplashScreen(
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color(0xFF94A3B8)
             )
-        }
 
-        // Footer Credit
-        Text(
-            text = "created by rxbin_.wave",
-            style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
-            fontWeight = FontWeight.Medium,
-            color = Color(0xFF38BDF8),
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 36.dp)
-        )
+            Spacer(modifier = Modifier.height(14.dp))
+
+            Text(
+                text = "created by rxbin_.wave",
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF38BDF8),
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
