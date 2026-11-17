@@ -44,6 +44,7 @@ object EinsatzCsvParser {
 
         // Find column indices from header row (Line 1)
         val idxDatum = findColumnIndex(headerTokens, "datum")
+        val idxBs = findColumnIndex(headerTokens, "bs")
         val idxAbZeit = findColumnIndex(headerTokens, "ab-zeit", "abzeit", "ab_zeit")
         val idxAbBhf = findColumnIndex(headerTokens, "ab-bhf", "abbhf", "ab_bhf", "ab-bahnhof", "abfahrt")
         val idxAnZeit = findColumnIndex(headerTokens, "an-zeit", "anzeit", "an_zeit")
@@ -61,6 +62,7 @@ object EinsatzCsvParser {
             val tokens = line.split(delimiter).map { it.trim().removeSurrounding("\"") }
 
             var datumStr = getFieldValue(tokens, idxDatum)
+            val bs = getFieldValue(tokens, idxBs)
             var abZeit = getFieldValue(tokens, idxAbZeit)
             var abBahnhof = getFieldValue(tokens, idxAbBhf)
             var anZeit = getFieldValue(tokens, idxAnZeit)
@@ -98,6 +100,9 @@ object EinsatzCsvParser {
                     Einsatz(
                         datumStr = datumStr,
                         datumMillis = datumMillis,
+                        originalDatumStr = datumStr,
+                        originalDatumMillis = datumMillis,
+                        bs = bs,
                         abZeit = abZeit,
                         abBahnhof = abBahnhof,
                         anZeit = anZeit,

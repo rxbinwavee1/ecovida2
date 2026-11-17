@@ -8,7 +8,8 @@ enum class EinsatzStatus(val label: String) {
     OFFEN("Offen"),
     ABGESCHLOSSEN("Abgeschlossen"),
     ABGEBROCHEN("Abgebrochen"),
-    VERSCHOBEN("Verschoben");
+    VERSCHOBEN("Verschoben"),
+    AUSGEFALLEN("Ausgefallen");
 
     companion object {
         fun fromName(name: String?): EinsatzStatus {
@@ -31,6 +32,7 @@ data class Einsatz(
     val datumMillis: Long = 0L,
     val originalDatumStr: String = "",
     val originalDatumMillis: Long = 0L,
+    val bs: String = "",
     val abZeit: String = "",
     val abBahnhof: String = "",
     val anZeit: String = "",
@@ -41,6 +43,14 @@ data class Einsatz(
     val status: EinsatzStatus = EinsatzStatus.OFFEN,
     val createdAtMillis: Long = System.currentTimeMillis()
 ) {
+    fun getBsLabel(): String {
+        return when (bs.trim()) {
+            "1" -> "Zählung"
+            "3" -> "Leerfahrt"
+            else -> bs
+        }
+    }
+
     fun getEffectiveMillis(): Long {
         return if (datumMillis > 0L) datumMillis else createdAtMillis
     }

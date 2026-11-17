@@ -17,12 +17,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CheckCircleOutline
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.EventBusy
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Schedule
@@ -150,7 +153,7 @@ fun EinsatzCard(
                                     text = { Text(status.label) },
                                     onClick = {
                                         statusMenuExpanded = false
-                                        if (status == EinsatzStatus.VERSCHOBEN) {
+                                        if (status == EinsatzStatus.VERSCHOBEN || status == EinsatzStatus.AUSGEFALLEN) {
                                             onRescheduleClick(einsatz)
                                         } else {
                                             onStatusChange(einsatz, status)
@@ -182,6 +185,20 @@ fun EinsatzCard(
                             },
                             leadingIcon = {
                                 Icon(Icons.Default.CalendarToday, contentDescription = null)
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Fahrt ausgefallen (Nacherhebung)") },
+                            onClick = {
+                                menuExpanded = false
+                                onRescheduleClick(einsatz)
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.EventBusy,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
                             }
                         )
                         DropdownMenuItem(
@@ -313,7 +330,7 @@ fun EinsatzCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Footer Chips: Tour-Nr | Linie | Honorar (€)
+            // Footer Chips: Tour-Nr | Linie | BS (Zählung / Leerfahrt) | Honorar (€)
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -359,6 +376,28 @@ fun EinsatzCard(
                     )
                 }
 
+                if (einsatz.bs.isNotBlank()) {
+                    val bsLabel = einsatz.getBsLabel()
+                    SuggestionChip(
+                        onClick = { },
+                        label = {
+                            Text(
+                                text = bsLabel,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = if (bsLabel == "Zählung") Color(0xFF10B981) else Color(0xFFF59E0B)
+                            )
+                        },
+                        colors = SuggestionChipDefaults.suggestionChipColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        ),
+                        border = SuggestionChipDefaults.suggestionChipBorder(
+                            enabled = true,
+                            borderColor = (if (bsLabel == "Zählung") Color(0xFF10B981) else Color(0xFFF59E0B)).copy(alpha = 0.5f)
+                        )
+                    )
+                }
+
                 if (einsatz.betragEuro > 0.0) {
                     Surface(
                         shape = RoundedCornerShape(8.dp),
@@ -388,6 +427,7 @@ private fun StatusChip(
         EinsatzStatus.ABGESCHLOSSEN -> Triple(Color(0xFFE8F5E9), Color(0xFF2E7D32), Icons.Default.CheckCircle)
         EinsatzStatus.ABGEBROCHEN -> Triple(Color(0xFFFFEBEE), Color(0xFFC62828), Icons.Default.Cancel)
         EinsatzStatus.VERSCHOBEN -> Triple(Color(0xFFFFF3E0), Color(0xFFE65100), Icons.Default.Schedule)
+        EinsatzStatus.AUSGEFALLEN -> Triple(Color(0xFFFEE2E2), Color(0xFFDC2626), Icons.Default.ErrorOutline)
     }
 
     Surface(

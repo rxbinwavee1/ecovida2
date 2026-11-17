@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.econexeinsatzliste.ai.EinsatzCsvParser
-import com.econexeinsatzliste.ai.EinsatzScreenshotParser
 import com.econexeinsatzliste.data.Einsatz
 import com.econexeinsatzliste.data.EinsatzRepository
 import com.econexeinsatzliste.data.EinsatzStatus
@@ -32,10 +31,9 @@ class EinsatzViewModel(private val repository: EinsatzRepository) : ViewModel() 
             repository.refresh(_uiState.value.isAutoDeleteEnabled)
             repository.einsatzeFlow.collect { list ->
                 val autoDeleted = repository.lastDeletedCount.value
-                val totalSum = list.filter { it.status != EinsatzStatus.ABGEBROCHEN }
-                    .sumOf { it.betragEuro }
                 _uiState.update { state ->
                     val filtered = applyFilter(list, state.activeTab, state.searchQuery, state.selectedStatusFilter)
+                    val totalSum = calculateEarnings(list, state.activeTab)
                     state.copy(
                         einsatze = list,
                         filteredEinsatze = filtered,
@@ -45,6 +43,14 @@ class EinsatzViewModel(private val repository: EinsatzRepository) : ViewModel() 
                     )
                 }
             }
+        }
+    }
+
+    private fun calculateEarnings(list: List<Einsatz>, tab: EinsatzTab): Double {
+        return if (tab == EinsatzTab.ARCHIV) {
+            list.filter { it.status == EinsatzStatus.ABGESCHLOSSEN }.sumOf { it.betragEuro }
+        } else {
+            list.filter { it.status != EinsatzStatus.ABGESCHLOSSEN && it.status != EinsatzStatus.ABGEBROCHEN }.sumOf { it.betragEuro }
         }
     }
 
@@ -72,7 +78,13 @@ class EinsatzViewModel(private val repository: EinsatzRepository) : ViewModel() 
     fun setActiveTab(tab: EinsatzTab) {
         _uiState.update { state ->
             val filtered = applyFilter(state.einsatze, tab, state.searchQuery, null)
-            state.copy(activeTab = tab, selectedStatusFilter = null, filteredEinsatze = filtered)
+            val totalSum = calculateEarnings(state.einsatze, tab)
+            state.copy(
+                activeTab = tab,
+                selectedStatusFilter = null,
+                filteredEinsatze = filtered,
+                totalEarnings = totalSum
+            )
         }
     }
 
@@ -112,31 +124,13 @@ class EinsatzViewModel(private val repository: EinsatzRepository) : ViewModel() 
                         it.abBahnhof.lowercase().contains(q) ||
                         it.anBahnhof.lowercase().contains(q) ||
                         it.tourNr.lowercase().contains(q) ||
-                        it.linie.lowercase().contains(q)
+                        it.linie.lowercase().contains(q) ||
+                        it.bs.lowercase().contains(q) ||
+                        it.getBsLabel().lowercase().contains(q)
             }
         }
 
         return result.sortedWith(compareBy({ it.getEffectiveMillis() }, { it.abZeit }))
-    }
-
-    fun analyzeScreenshot(context: Context, uri: Uri) {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isParsingScreenshot = true) }
-            val parsedList = EinsatzScreenshotParser.parseScreenshot(context, uri)
-            _uiState.update { state ->
-                if (parsedList.isEmpty()) {
-                    state.copy(
-                        isParsingScreenshot = false,
-                        userMessage = "Keine Einsätze auf dem Screenshot gefunden."
-                    )
-                } else {
-                    state.copy(
-                        isParsingScreenshot = false,
-                        parsedPreviewList = parsedList
-                    )
-                }
-            }
-        }
     }
 
     fun analyzeCsvUri(context: Context, uri: Uri) {

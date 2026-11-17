@@ -243,17 +243,20 @@ fun EinsatzAppScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            val activeCount = uiState.einsatze.count { it.status != EinsatzStatus.ABGESCHLOSSEN }
+            val archiveCount = uiState.einsatze.count { it.status == EinsatzStatus.ABGESCHLOSSEN }
+            val isArchive = uiState.activeTab == EinsatzTab.ARCHIV
+
             // Header Stats Summary
             EinsatzHeaderStats(
-                totalCount = uiState.einsatze.count { it.status != EinsatzStatus.ABGESCHLOSSEN },
-                totalEarnings = uiState.totalEarnings
+                totalCount = if (isArchive) archiveCount else activeCount,
+                totalEarnings = uiState.totalEarnings,
+                isArchive = isArchive
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
             // Main Tabs: Aktive Einsätze vs Archiv
-            val activeCount = uiState.einsatze.count { it.status != EinsatzStatus.ABGESCHLOSSEN }
-            val archiveCount = uiState.einsatze.count { it.status == EinsatzStatus.ABGESCHLOSSEN }
 
             TabRow(
                 selectedTabIndex = uiState.activeTab.ordinal,

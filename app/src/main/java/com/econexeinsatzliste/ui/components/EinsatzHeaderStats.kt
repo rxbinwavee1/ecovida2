@@ -30,6 +30,7 @@ import java.util.Locale
 fun EinsatzHeaderStats(
     totalCount: Int,
     totalEarnings: Double,
+    isArchive: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -66,7 +67,7 @@ fun EinsatzHeaderStats(
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
-                        text = "Gesamthonorar",
+                        text = if (isArchive) "Bereits verdient" else "Gesamthonorar",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                     )
@@ -79,7 +80,7 @@ fun EinsatzHeaderStats(
                 }
             }
 
-            // Active shifts item
+            // Count item
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Surface(
                     shape = RoundedCornerShape(12.dp),
@@ -98,7 +99,7 @@ fun EinsatzHeaderStats(
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
-                        text = "Aktive Einsätze",
+                        text = if (isArchive) "Archivierte Einsätze" else "Aktive Einsätze",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                     )

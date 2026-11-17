@@ -90,7 +90,6 @@ function saveData() {
 function cleanup30DaysOld() {
   if (!isAutoDeleteEnabled) return;
   const now = Date.now();
-  // Unconditionally delete entries older than 30 days (Active & Archived!)
   einsatze = einsatze.filter(item => {
     const effective = item.datumMillis || item.createdAt || now;
     return (now - effective) <= THIRTY_DAYS_MS;
@@ -110,6 +109,15 @@ function parseGermanDateToMillis(dateStr) {
   return Date.now();
 }
 
+// Helper for BS Label
+function getBsLabel(bs) {
+  if (!bs) return '';
+  const clean = String(bs).trim();
+  if (clean === '1') return 'Zählung';
+  if (clean === '3') return 'Leerfahrt';
+  return clean;
+}
+
 // Render Main App UI
 function renderApp() {
   renderStats();
@@ -118,15 +126,27 @@ function renderApp() {
 
 function renderStats() {
   const activeItems = einsatze.filter(i => i.status !== 'ABGESCHLOSSEN');
-  const totalSum = einsatze
-    .filter(i => i.status !== 'ABGEBROCHEN')
-    .reduce((sum, item) => sum + (parseFloat(item.betragEuro) || 0), 0);
+  const archiveItems = einsatze.filter(i => i.status === 'ABGESCHLOSSEN');
+
+  const isArchiv = (currentTab === 'ARCHIV');
+  const labelText = isArchiv ? 'Bereits verdient' : 'Gesamthonorar';
+  const countLabelText = isArchiv ? 'Archivierte Einsätze' : 'Aktive Einsätze';
+
+  const totalSum = isArchiv
+    ? archiveItems.reduce((sum, item) => sum + (parseFloat(item.betragEuro) || 0), 0)
+    : einsatze.filter(i => i.status !== 'ABGESCHLOSSEN' && i.status !== 'ABGEBROCHEN').reduce((sum, item) => sum + (parseFloat(item.betragEuro) || 0), 0);
+
+  const statsLabels = document.querySelectorAll('.stats-card .stat-info .label');
+  if (statsLabels.length >= 2) {
+    statsLabels[0].textContent = labelText;
+    statsLabels[1].textContent = countLabelText;
+  }
 
   document.getElementById('total-earnings').textContent = totalSum.toFixed(2).replace('.', ',') + ' €';
-  document.getElementById('active-count').textContent = activeItems.length;
+  document.getElementById('active-count').textContent = isArchiv ? archiveItems.length : activeItems.length;
 
   document.getElementById('tab-aktiv-label').textContent = `Aktive Einsätze (${activeItems.length})`;
-  document.getElementById('tab-archiv-label').textContent = `Archiv (${einsatze.length - activeItems.length})`;
+  document.getElementById('tab-archiv-label').textContent = `Archiv (${archiveItems.length})`;
 }
 
 function getFilteredList() {
@@ -152,7 +172,9 @@ function getFilteredList() {
       (i.abBahnhof && i.abBahnhof.toLowerCase().includes(q)) ||
       (i.anBahnhof && i.anBahnhof.toLowerCase().includes(q)) ||
       (i.tourNr && i.tourNr.toLowerCase().includes(q)) ||
-      (i.linie && i.linie.toLowerCase().includes(q))
+      (i.linie && i.linie.toLowerCase().includes(q)) ||
+      (i.bs && i.bs.toLowerCase().includes(q)) ||
+      (getBsLabel(i.bs).toLowerCase().includes(q))
     );
   }
 
@@ -188,6 +210,7 @@ function renderList() {
     card.className = `shift-card ${item.status === 'ABGESCHLOSSEN' ? 'completed' : ''}`;
 
     const isDone = item.status === 'ABGESCHLOSSEN';
+    const bsText = getBsLabel(item.bs);
 
     card.innerHTML = `
       <div class="shift-card-header">
@@ -214,8 +237,10 @@ function renderList() {
       <div class="pills-row">
         ${item.tourNr ? `<span class="pill">Tour-Nr: ${item.tourNr}</span>` : ''}
         ${item.linie ? `<span class="pill" style="color: var(--primary); font-weight: bold;">Linie: ${item.linie}</span>` : ''}
+        ${bsText ? `<span class="pill" style="color: ${bsText === 'Zählung' ? 'var(--emerald)' : 'var(--amber)'}; font-weight: bold;">${bsText}</span>` : ''}
         ${item.betragEuro ? `<span class="pill pill-honorar">Honorar: ${parseFloat(item.betragEuro).toFixed(2).replace('.', ',')} €</span>` : ''}
         <button class="pill" onclick="openRescheduleModal('${item.id}')">📅 Verschieben</button>
+        <button class="pill" onclick="rescheduleOutage('${item.id}')" style="color: var(--amber);">⚠️ Ausgefallen (Nacherhebung)</button>
         <button class="pill" onclick="cancelShift('${item.id}')" style="color: var(--error);">🚫 Abbrechen</button>
       </div>
     `;
@@ -229,6 +254,7 @@ function getStatusLabel(s) {
     case 'ABGESCHLOSSEN': return 'Abgeschlossen';
     case 'VERSCHOBEN': return 'Verschoben';
     case 'ABGEBROCHEN': return 'Abgebrochen';
+    case 'AUSGEFALLEN': return 'Ausgefallen';
     default: return 'Offen';
   }
 }
@@ -244,7 +270,7 @@ function toggleStatus(id) {
 function cycleStatus(id) {
   const item = einsatze.find(i => i.id === id);
   if (!item) return;
-  const statuses = ['OFFEN', 'ABGESCHLOSSEN', 'VERSCHOBEN', 'ABGEBROCHEN'];
+  const statuses = ['OFFEN', 'ABGESCHLOSSEN', 'VERSCHOBEN', 'ABGEBROCHEN', 'AUSGEFALLEN'];
   const nextIdx = (statuses.indexOf(item.status) + 1) % statuses.length;
   item.status = statuses[nextIdx];
   saveData();
@@ -255,6 +281,15 @@ function cancelShift(id) {
   if (item) {
     item.status = 'ABGEBROCHEN';
     saveData();
+  }
+}
+
+function rescheduleOutage(id) {
+  rescheduleTargetId = id;
+  const item = einsatze.find(i => i.id === id);
+  if (item) {
+    item.status = 'AUSGEFALLEN';
+    document.getElementById('reschedule-modal').style.display = 'flex';
   }
 }
 
@@ -282,6 +317,7 @@ function saveManualEntry() {
     datumMillis: datumMillis,
     originalDatumStr: datumStr,
     originalDatumMillis: datumMillis,
+    bs: '1',
     abZeit: abZeit,
     abBahnhof: abBahnhof,
     anZeit: anZeit,
@@ -344,6 +380,7 @@ function parseAndSaveCsv(csvContent) {
   const headers = lines[0].split(delimiter).map(h => h.trim().toLowerCase());
 
   const idxDatum = headers.findIndex(h => h.includes('datum'));
+  const idxBs = headers.findIndex(h => h === 'bs' || h.includes('bs'));
   const idxAbZeit = headers.findIndex(h => h.includes('ab-zeit') || h.includes('abzeit'));
   const idxAbBhf = headers.findIndex(h => h.includes('ab-bhf') || h.includes('abbhf'));
   const idxAnZeit = headers.findIndex(h => h.includes('an-zeit') || h.includes('anzeit'));
@@ -359,6 +396,7 @@ function parseAndSaveCsv(csvContent) {
     if (tokens.length < 2) continue;
 
     const datumStr = idxDatum !== -1 ? tokens[idxDatum] : tokens[0];
+    const bsVal = idxBs !== -1 ? tokens[idxBs] : tokens[1] || '';
     const abZeit = idxAbZeit !== -1 ? tokens[idxAbZeit] : tokens[2] || '';
     const abBahnhof = idxAbBhf !== -1 ? tokens[idxAbBhf] : tokens[3] || '';
     const anZeit = idxAnZeit !== -1 ? tokens[idxAnZeit] : tokens[4] || '';
@@ -376,6 +414,7 @@ function parseAndSaveCsv(csvContent) {
       datumMillis: datumMillis,
       originalDatumStr: datumStr,
       originalDatumMillis: datumMillis,
+      bs: bsVal,
       abZeit: abZeit,
       abBahnhof: abBahnhof,
       anZeit: anZeit,
@@ -433,7 +472,10 @@ function saveReschedule() {
         const isBackToOriginal = (formattedGermanDate === origStr || d.getTime() === origMillis);
         item.datumStr = formattedGermanDate;
         item.datumMillis = d.getTime();
-        item.status = isBackToOriginal ? 'OFFEN' : 'VERSCHOBEN';
+        // If current status is not already AUSGEFALLEN, toggle to VERSCHOBEN / OFFEN
+        if (item.status !== 'AUSGEFALLEN') {
+          item.status = isBackToOriginal ? 'OFFEN' : 'VERSCHOBEN';
+        }
         saveData();
       }
     }
