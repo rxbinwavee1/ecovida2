@@ -10,12 +10,14 @@ class EconexDatabaseHelper(context: Context) :
 
     companion object {
         private const val DATABASE_NAME = "econex_einsatz.db"
-        private const val DATABASE_VERSION = 4
+        private const val DATABASE_VERSION = 5
 
         const val TABLE_EINSATZ = "einsatz"
         const val COLUMN_ID = "id"
         const val COLUMN_DATUM_STR = "datum_str"
         const val COLUMN_DATUM_MILLIS = "datum_millis"
+        const val COLUMN_ORIGINAL_DATUM_STR = "original_datum_str"
+        const val COLUMN_ORIGINAL_DATUM_MILLIS = "original_datum_millis"
         const val COLUMN_AB_ZEIT = "ab_zeit"
         const val COLUMN_AB_BAHNHOF = "ab_bahnhof"
         const val COLUMN_AN_ZEIT = "an_zeit"
@@ -35,6 +37,8 @@ class EconexDatabaseHelper(context: Context) :
                 $COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT,
                 $COLUMN_DATUM_STR TEXT,
                 $COLUMN_DATUM_MILLIS INTEGER,
+                $COLUMN_ORIGINAL_DATUM_STR TEXT,
+                $COLUMN_ORIGINAL_DATUM_MILLIS INTEGER,
                 $COLUMN_AB_ZEIT TEXT,
                 $COLUMN_AB_BAHNHOF TEXT,
                 $COLUMN_AN_ZEIT TEXT,
@@ -54,6 +58,9 @@ class EconexDatabaseHelper(context: Context) :
         onCreate(db)
     }
 
+    /**
+     * Unconditionally deletes all entries older than 30 days (Active & Archived!).
+     */
     fun deleteEntriesOlderThan30Days(nowMillis: Long = System.currentTimeMillis()): Int {
         val cutoffMillis = nowMillis - MILLIS_IN_30_DAYS
         val db = writableDatabase
@@ -67,8 +74,13 @@ class EconexDatabaseHelper(context: Context) :
     fun insertEinsatz(einsatz: Einsatz): Long {
         val db = writableDatabase
         val values = ContentValues().apply {
+            val origStr = einsatz.originalDatumStr.ifBlank { einsatz.datumStr }
+            val origMillis = if (einsatz.originalDatumMillis > 0L) einsatz.originalDatumMillis else einsatz.datumMillis
+
             put(COLUMN_DATUM_STR, einsatz.datumStr)
             put(COLUMN_DATUM_MILLIS, einsatz.datumMillis)
+            put(COLUMN_ORIGINAL_DATUM_STR, origStr)
+            put(COLUMN_ORIGINAL_DATUM_MILLIS, origMillis)
             put(COLUMN_AB_ZEIT, einsatz.abZeit)
             put(COLUMN_AB_BAHNHOF, einsatz.abBahnhof)
             put(COLUMN_AN_ZEIT, einsatz.anZeit)
@@ -101,8 +113,13 @@ class EconexDatabaseHelper(context: Context) :
     fun updateEinsatz(einsatz: Einsatz): Boolean {
         val db = writableDatabase
         val values = ContentValues().apply {
+            val origStr = einsatz.originalDatumStr.ifBlank { einsatz.datumStr }
+            val origMillis = if (einsatz.originalDatumMillis > 0L) einsatz.originalDatumMillis else einsatz.datumMillis
+
             put(COLUMN_DATUM_STR, einsatz.datumStr)
             put(COLUMN_DATUM_MILLIS, einsatz.datumMillis)
+            put(COLUMN_ORIGINAL_DATUM_STR, origStr)
+            put(COLUMN_ORIGINAL_DATUM_MILLIS, origMillis)
             put(COLUMN_AB_ZEIT, einsatz.abZeit)
             put(COLUMN_AB_BAHNHOF, einsatz.abBahnhof)
             put(COLUMN_AN_ZEIT, einsatz.anZeit)
@@ -142,6 +159,8 @@ class EconexDatabaseHelper(context: Context) :
             val idIndex = c.getColumnIndexOrThrow(COLUMN_ID)
             val datumStrIndex = c.getColumnIndexOrThrow(COLUMN_DATUM_STR)
             val datumMillisIndex = c.getColumnIndexOrThrow(COLUMN_DATUM_MILLIS)
+            val origStrIndex = c.getColumnIndexOrThrow(COLUMN_ORIGINAL_DATUM_STR)
+            val origMillisIndex = c.getColumnIndexOrThrow(COLUMN_ORIGINAL_DATUM_MILLIS)
             val abZeitIndex = c.getColumnIndexOrThrow(COLUMN_AB_ZEIT)
             val abBahnhofIndex = c.getColumnIndexOrThrow(COLUMN_AB_BAHNHOF)
             val anZeitIndex = c.getColumnIndexOrThrow(COLUMN_AN_ZEIT)
@@ -157,6 +176,8 @@ class EconexDatabaseHelper(context: Context) :
                     id = c.getLong(idIndex),
                     datumStr = c.getString(datumStrIndex) ?: "",
                     datumMillis = c.getLong(datumMillisIndex),
+                    originalDatumStr = c.getString(origStrIndex) ?: "",
+                    originalDatumMillis = c.getLong(origMillisIndex),
                     abZeit = c.getString(abZeitIndex) ?: "",
                     abBahnhof = c.getString(abBahnhofIndex) ?: "",
                     anZeit = c.getString(anZeitIndex) ?: "",

@@ -1,6 +1,7 @@
 // Econex Planer WebApp (PWA) Logic
 const STORAGE_KEY = 'econex_planer_einsatze_v1';
 const THEME_KEY = 'econex_planer_theme';
+const AUTODELETE_KEY = 'econex_planer_autodelete';
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
 let einsatze = [];
@@ -8,6 +9,7 @@ let currentTab = 'AKTIV'; // 'AKTIV' or 'ARCHIV'
 let currentStatusFilter = null;
 let searchQuery = '';
 let isDarkTheme = true;
+let isAutoDeleteEnabled = true;
 
 // DOM Elements
 document.addEventListener('DOMContentLoaded', () => {
@@ -41,10 +43,7 @@ function applyTheme() {
   }
 }
 
-// Data Persistence & 30-Day Auto Cleanup
-const AUTODELETE_KEY = 'econex_planer_autodelete';
-let isAutoDeleteEnabled = true;
-
+// Auto Delete Toggle
 function toggleAutoDelete() {
   isAutoDeleteEnabled = !isAutoDeleteEnabled;
   localStorage.setItem(AUTODELETE_KEY, isAutoDeleteEnabled ? 'true' : 'false');
@@ -61,10 +60,11 @@ function updateAutoDeleteBtn() {
   const btn = document.getElementById('autodelete-btn');
   if (btn) {
     btn.style.opacity = isAutoDeleteEnabled ? '1.0' : '0.35';
-    btn.title = isAutoDeleteEnabled ? '30-Tage Auto-Löschung: AKTIV (Tippen zum Deaktivieren)' : '30-Tage Auto-Löschung: DEAKTIVIERT (Tippen zum Aktivieren)';
+    btn.title = isAutoDeleteEnabled ? '30-Tage Auto-Löschung: AKTIV' : '30-Tage Auto-Löschung: DEAKTIVIERT';
   }
 }
 
+// Data Persistence & 30-Day Auto Cleanup
 function loadData() {
   try {
     const savedAutoDelete = localStorage.getItem(AUTODELETE_KEY);
@@ -90,6 +90,7 @@ function saveData() {
 function cleanup30DaysOld() {
   if (!isAutoDeleteEnabled) return;
   const now = Date.now();
+  // Unconditionally delete entries older than 30 days (Active & Archived!)
   einsatze = einsatze.filter(item => {
     const effective = item.datumMillis || item.createdAt || now;
     return (now - effective) <= THIRTY_DAYS_MS;
@@ -176,7 +177,7 @@ function renderList() {
     listContainer.innerHTML = `
       <div class="empty-state">
         <p><strong>Keine Einsätze gefunden</strong></p>
-        <p>Füge einen Screenshot oder eine CSV-Datei ein!</p>
+        <p>Lade eine CSV-Datei hoch oder trage einen Einsatz manuell ein!</p>
       </div>
     `;
     return;
@@ -215,6 +216,7 @@ function renderList() {
         ${item.linie ? `<span class="pill" style="color: var(--primary); font-weight: bold;">Linie: ${item.linie}</span>` : ''}
         ${item.betragEuro ? `<span class="pill pill-honorar">Honorar: ${parseFloat(item.betragEuro).toFixed(2).replace('.', ',')} €</span>` : ''}
         <button class="pill" onclick="openRescheduleModal('${item.id}')">📅 Verschieben</button>
+        <button class="pill" onclick="cancelShift('${item.id}')" style="color: var(--error);">🚫 Abbrechen</button>
       </div>
     `;
 
@@ -248,6 +250,14 @@ function cycleStatus(id) {
   saveData();
 }
 
+function cancelShift(id) {
+  const item = einsatze.find(i => i.id === id);
+  if (item) {
+    item.status = 'ABGEBROCHEN';
+    saveData();
+  }
+}
+
 function saveManualEntry() {
   const datumStr = document.getElementById('m-datum').value.trim();
   const abZeit = document.getElementById('m-abzeit').value.trim();
@@ -264,11 +274,14 @@ function saveManualEntry() {
   }
 
   const euroClean = parseFloat(honorarVal.replace(/[^\d,.+]/g, '').replace(',', '.')) || 0;
+  const datumMillis = parseGermanDateToMillis(datumStr);
 
   const newItem = {
     id: 'man_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
     datumStr: datumStr,
-    datumMillis: parseGermanDateToMillis(datumStr),
+    datumMillis: datumMillis,
+    originalDatumStr: datumStr,
+    originalDatumMillis: datumMillis,
     abZeit: abZeit,
     abBahnhof: abBahnhof,
     anZeit: anZeit,
@@ -355,11 +368,14 @@ function parseAndSaveCsv(csvContent) {
     const euroVal = idxEuro !== -1 ? tokens[idxEuro] : tokens[13] || '0';
 
     const euroClean = parseFloat(euroVal.replace(/[^\d,.+]/g, '').replace(',', '.')) || 0;
+    const datumMillis = parseGermanDateToMillis(datumStr);
 
     parsed.push({
       id: 'csv_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
       datumStr: datumStr,
-      datumMillis: parseGermanDateToMillis(datumStr),
+      datumMillis: datumMillis,
+      originalDatumStr: datumStr,
+      originalDatumMillis: datumMillis,
       abZeit: abZeit,
       abBahnhof: abBahnhof,
       anZeit: anZeit,
@@ -408,9 +424,16 @@ function saveReschedule() {
 
       const item = einsatze.find(i => i.id === rescheduleTargetId);
       if (item) {
+        const origStr = item.originalDatumStr || item.datumStr;
+        const origMillis = item.originalDatumMillis || item.datumMillis;
+
+        item.originalDatumStr = origStr;
+        item.originalDatumMillis = origMillis;
+
+        const isBackToOriginal = (formattedGermanDate === origStr || d.getTime() === origMillis);
         item.datumStr = formattedGermanDate;
         item.datumMillis = d.getTime();
-        item.status = 'VERSCHOBEN';
+        item.status = isBackToOriginal ? 'OFFEN' : 'VERSCHOBEN';
         saveData();
       }
     }
@@ -432,7 +455,9 @@ function setTab(tab) {
 function setStatusFilter(status) {
   currentStatusFilter = status;
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-  event.target.classList.add('active');
+  if (event && event.target) {
+    event.target.classList.add('active');
+  }
   renderList();
 }
 

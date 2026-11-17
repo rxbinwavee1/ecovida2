@@ -29,6 +29,8 @@ data class Einsatz(
     val id: Long = 0,
     val datumStr: String = "",
     val datumMillis: Long = 0L,
+    val originalDatumStr: String = "",
+    val originalDatumMillis: Long = 0L,
     val abZeit: String = "",
     val abBahnhof: String = "",
     val anZeit: String = "",
@@ -43,6 +45,10 @@ data class Einsatz(
         return if (datumMillis > 0L) datumMillis else createdAtMillis
     }
 
+    fun getEffectiveOriginalMillis(): Long {
+        return if (originalDatumMillis > 0L) originalDatumMillis else datumMillis
+    }
+
     fun isOlderThan30Days(nowMillis: Long = System.currentTimeMillis()): Boolean {
         val thirtyDaysInMillis = 30L * 24 * 60 * 60 * 1000
         val effective = getEffectiveMillis()
@@ -55,7 +61,6 @@ data class Einsatz(
         fun parseDateStrToMillis(dateStr: String): Long {
             if (dateStr.isBlank()) return System.currentTimeMillis()
 
-            // Extract dd.MM.yyyy from strings like "Mi., 04.11.2026" or "Di, 10.11.2026"
             val dateMatch = Regex("""\b(\d{1,2}\.\d{1,2}\.\d{4})\b""").find(dateStr)
             val cleanDate = dateMatch?.value ?: dateStr.replace(Regex("""^[A-Za-z.\s,]+"""), "").trim()
 

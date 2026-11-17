@@ -185,6 +185,20 @@ fun EinsatzCard(
                             }
                         )
                         DropdownMenuItem(
+                            text = { Text("Fahrt abbrechen") },
+                            onClick = {
+                                menuExpanded = false
+                                onStatusChange(einsatz, EinsatzStatus.ABGEBROCHEN)
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Cancel,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        )
+                        DropdownMenuItem(
                             text = { Text("Bearbeiten") },
                             onClick = {
                                 menuExpanded = false

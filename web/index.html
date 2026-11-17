@@ -35,13 +35,8 @@
 
     <!-- Top Action Buttons Row -->
     <div class="action-buttons-row">
-      <button class="btn-action btn-primary" onclick="document.getElementById('file-screenshot').click()">
-        ✨ Screenshot
-      </button>
-      <input type="file" id="file-screenshot" accept="image/*" style="display: none;" onchange="alert('Screenshot verarbeitet!')">
-
-      <button class="btn-action btn-secondary" onclick="document.getElementById('file-csv').click()">
-        📊 CSV
+      <button class="btn-action btn-primary" onclick="document.getElementById('file-csv').click()">
+        📊 CSV Import
       </button>
       <input type="file" id="file-csv" accept=".csv, .txt" style="display: none;" onchange="handleCsvUpload(this.files[0])">
 

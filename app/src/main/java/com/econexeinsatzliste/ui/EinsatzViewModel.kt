@@ -223,16 +223,28 @@ class EinsatzViewModel(private val repository: EinsatzRepository) : ViewModel() 
     fun rescheduleEinsatz(context: Context, einsatz: Einsatz, newDateStr: String) {
         viewModelScope.launch {
             val newMillis = Einsatz.parseDateStrToMillis(newDateStr)
+            val origStr = einsatz.originalDatumStr.ifBlank { einsatz.datumStr }
+            val origMillis = if (einsatz.originalDatumMillis > 0L) einsatz.originalDatumMillis else einsatz.datumMillis
+
+            val isBackToOriginal = (newDateStr == origStr || newMillis == origMillis)
+            val nextStatus = if (isBackToOriginal) EinsatzStatus.OFFEN else EinsatzStatus.VERSCHOBEN
+
             val updated = einsatz.copy(
                 datumStr = newDateStr,
                 datumMillis = newMillis,
-                status = EinsatzStatus.VERSCHOBEN
+                originalDatumStr = origStr,
+                originalDatumMillis = origMillis,
+                status = nextStatus
             )
             repository.updateEinsatz(updated, _uiState.value.isAutoDeleteEnabled)
             EinsatzNotificationHelper.scheduleTourMorningReminder(context, updated)
-            _uiState.update {
-                it.copy(userMessage = "Einsatz auf $newDateStr verschoben & neu eingeordnet!")
-            }
+
+            val msg = if (isBackToOriginal)
+                "Einsatz auf Ursprungsdatum zurückgesetzt (Status: Offen)"
+            else
+                "Einsatz auf $newDateStr verschoben & neu eingeordnet!"
+
+            _uiState.update { it.copy(userMessage = msg) }
         }
     }
 

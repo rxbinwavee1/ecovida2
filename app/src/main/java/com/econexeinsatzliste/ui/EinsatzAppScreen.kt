@@ -32,7 +32,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.AutoDelete
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DarkMode
@@ -110,15 +109,6 @@ fun EinsatzAppScreen(
     LaunchedEffect(Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             permissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-        }
-    }
-
-    // Image Picker for Screenshots
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        if (uri != null) {
-            viewModel.analyzeScreenshot(context, uri)
         }
     }
 
@@ -201,56 +191,30 @@ fun EinsatzAppScreen(
         ) {
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Top 3 Action Buttons: Screenshot | CSV | Manuell (Equal Size & Compact Padding)
+            // Action Buttons Bar: CSV Import | + Manuell
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Button(
-                    onClick = { imagePickerLauncher.launch("image/*") },
+                    onClick = { showCsvDialog = true },
                     modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary
                     )
                 ) {
                     Icon(
-                        imageVector = Icons.Default.AutoAwesome,
-                        contentDescription = null,
-                        modifier = Modifier.size(15.dp)
-                    )
-                    Spacer(modifier = Modifier.width(3.dp))
-                    Text(
-                        text = "Screenshot",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        softWrap = false
-                    )
-                }
-
-                Button(
-                    onClick = { showCsvDialog = true },
-                    modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary
-                    )
-                ) {
-                    Icon(
                         imageVector = Icons.Default.TableChart,
                         contentDescription = null,
-                        modifier = Modifier.size(15.dp)
+                        modifier = Modifier.size(18.dp)
                     )
-                    Spacer(modifier = Modifier.width(3.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "CSV",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        softWrap = false
+                        text = "CSV Import",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
@@ -260,21 +224,19 @@ fun EinsatzAppScreen(
                         showManualDialog = true
                     },
                     modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = null,
-                        modifier = Modifier.size(15.dp)
+                        modifier = Modifier.size(18.dp)
                     )
-                    Spacer(modifier = Modifier.width(3.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "Manuell",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        softWrap = false
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
@@ -402,7 +364,6 @@ fun EinsatzAppScreen(
                 EmptyStateView(
                     isArchive = uiState.activeTab == EinsatzTab.ARCHIV,
                     isSearch = uiState.searchQuery.isNotEmpty() || uiState.selectedStatusFilter != null,
-                    onImportScreenshotClick = { imagePickerLauncher.launch("image/*") },
                     onImportCsvClick = { showCsvDialog = true }
                 )
             } else {
@@ -474,8 +435,8 @@ fun EinsatzAppScreen(
         )
     }
 
-    // AI / CSV Loading Dialog
-    if (uiState.isParsingScreenshot || uiState.isParsingCsv) {
+    // CSV Loading Dialog
+    if (uiState.isParsingCsv) {
         Dialog(onDismissRequest = { }) {
             Surface(
                 shape = RoundedCornerShape(20.dp),
@@ -489,7 +450,7 @@ fun EinsatzAppScreen(
                     CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = if (uiState.isParsingScreenshot) "KI analysiert deinen Screenshot..." else "CSV Daten werden ausgewertet...",
+                        text = "CSV Daten werden ausgewertet...",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -523,6 +484,7 @@ fun EinsatzAppScreen(
             onDismiss = { rescheduleEinsatzTarget = null },
             onConfirmReschedule = { newDateStr ->
                 viewModel.rescheduleEinsatz(context, einsatzToReschedule, newDateStr)
+                rescheduleEinsatzTarget = null
             }
         )
     }
@@ -553,7 +515,6 @@ fun EinsatzAppScreen(
 private fun EmptyStateView(
     isArchive: Boolean,
     isSearch: Boolean,
-    onImportScreenshotClick: () -> Unit,
     onImportCsvClick: () -> Unit
 ) {
     Box(
@@ -591,7 +552,7 @@ private fun EmptyStateView(
                 text = when {
                     isSearch -> "Versuche einen anderen Filter oder Suchbegriff."
                     isArchive -> "Sobald du einen Einsatz als 'Abgeschlossen' markierst, erscheint er hier."
-                    else -> "Füge einen Screenshot deiner Einsatzliste ein oder lade eine CSV-Datei hoch!"
+                    else -> "Lade eine CSV-Datei hoch oder erstelle einen Einsatz manuell!"
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -601,35 +562,20 @@ private fun EmptyStateView(
             if (!isSearch && !isArchive) {
                 Spacer(modifier = Modifier.height(20.dp))
 
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Button(
-                        onClick = onImportScreenshotClick,
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.AutoAwesome,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Screenshot (KI)")
-                    }
-
-                    Button(
-                        onClick = onImportCsvClick,
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondary
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.TableChart,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("CSV Import")
-                    }
+                Button(
+                    onClick = onImportCsvClick,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.TableChart,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("CSV Import")
                 }
             }
         }
