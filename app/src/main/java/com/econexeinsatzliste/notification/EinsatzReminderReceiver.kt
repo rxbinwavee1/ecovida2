@@ -26,12 +26,12 @@ class EinsatzReminderReceiver : BroadcastReceiver() {
         if (tourNr.isNotBlank()) linieTourInfo.add("Tour $tourNr")
         val extraInfo = if (linieTourInfo.isNotEmpty()) " (${linieTourInfo.joinToString(", ")})" else ""
 
-        val message = "Morgen ($datumStr) ab $abZeit Uhr: $routeText$extraInfo"
+        val message = "Heute ($datumStr) ab $abZeit Uhr: $routeText$extraInfo"
 
         EinsatzNotificationHelper.showNotification(
             context = context,
             notificationId = id.toInt().coerceAtLeast(1001),
-            title = "Erinnerung: Einsatz morgen!",
+            title = "Erinnerung: Einsatz heute!",
             message = message
         )
     }

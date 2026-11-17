@@ -21,7 +21,8 @@ object EinsatzNotificationHelper {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val importance = NotificationManager.IMPORTANCE_HIGH
             val channel = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, importance).apply {
-                description = "Erinnerungen am Vorabend um 19 Uhr für anstehende Einsätze"
+                description = "Erinnerungen am Tag der Tour morgens um 8 Uhr"
+                enableVibration(true)
             }
             val notificationManager =
                 context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -30,15 +31,14 @@ object EinsatzNotificationHelper {
     }
 
     /**
-     * Schedules an alarm at 19:00 (7 PM) the evening before the shift date.
+     * Schedules an alarm at 8:00 AM on the day of the shift.
      */
-    fun scheduleEveningReminder(context: Context, einsatz: Einsatz) {
+    fun scheduleTourMorningReminder(context: Context, einsatz: Einsatz) {
         if (einsatz.datumMillis <= 0L) return
 
         val calendar = Calendar.getInstance().apply {
             timeInMillis = einsatz.datumMillis
-            add(Calendar.DAY_OF_YEAR, -1) // Evening BEFORE shift
-            set(Calendar.HOUR_OF_DAY, 19)  // 19:00 (7 PM)
+            set(Calendar.HOUR_OF_DAY, 8)  // 8:00 AM on shift date
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
@@ -68,7 +68,21 @@ object EinsatzNotificationHelper {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (alarmManager.canScheduleExactAlarms()) {
+                    alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        targetMillis,
+                        pendingIntent
+                    )
+                } else {
+                    alarmManager.setAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        targetMillis,
+                        pendingIntent
+                    )
+                }
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 alarmManager.setExactAndAllowWhileIdle(
                     AlarmManager.RTC_WAKEUP,
                     targetMillis,
@@ -79,10 +93,15 @@ object EinsatzNotificationHelper {
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            try {
+                alarmManager.set(AlarmManager.RTC_WAKEUP, targetMillis, pendingIntent)
+            } catch (ex: Exception) {
+                ex.printStackTrace()
+            }
         }
     }
 
-    fun cancelEveningReminder(context: Context, einsatzId: Long) {
+    fun cancelReminder(context: Context, einsatzId: Long) {
         val intent = Intent(context, EinsatzReminderReceiver::class.java)
         val pendingIntent = PendingIntent.getBroadcast(
             context,
