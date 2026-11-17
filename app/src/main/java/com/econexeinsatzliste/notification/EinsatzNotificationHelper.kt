@@ -21,7 +21,7 @@ object EinsatzNotificationHelper {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val importance = NotificationManager.IMPORTANCE_HIGH
             val channel = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, importance).apply {
-                description = "Erinnerungen am Tag der Tour morgens um 8 Uhr"
+                description = "Erinnerungen am Tag der Tour (8 Uhr & 1 Std. vor Abfahrt)"
                 enableVibration(true)
             }
             val notificationManager =
@@ -31,8 +31,13 @@ object EinsatzNotificationHelper {
     }
 
     /**
-     * Schedules an alarm at 8:00 AM on the day of the shift.
+     * Schedules both 8:00 AM morning reminder and 1 hour before departure reminder.
      */
+    fun scheduleAllReminders(context: Context, einsatz: Einsatz) {
+        scheduleTourMorningReminder(context, einsatz)
+        scheduleOneHourBeforeReminder(context, einsatz)
+    }
+
     fun scheduleTourMorningReminder(context: Context, einsatz: Einsatz) {
         if (einsatz.datumMillis <= 0L) return
 
@@ -45,11 +50,11 @@ object EinsatzNotificationHelper {
         }
 
         val targetMillis = calendar.timeInMillis
-        // Only schedule if reminder time is in the future
         if (targetMillis <= System.currentTimeMillis()) return
 
         val intent = Intent(context, EinsatzReminderReceiver::class.java).apply {
             putExtra("einsatz_id", einsatz.id)
+            putExtra("is_one_hour_before", false)
             putExtra("datum_str", einsatz.datumStr)
             putExtra("ab_zeit", einsatz.abZeit)
             putExtra("ab_bhf", einsatz.abBahnhof)
@@ -58,9 +63,10 @@ object EinsatzNotificationHelper {
             putExtra("tour_nr", einsatz.tourNr)
         }
 
+        val alarmId = (einsatz.id * 10 + 1).toInt()
         val pendingIntent = PendingIntent.getBroadcast(
             context,
-            einsatz.id.toInt(),
+            alarmId,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
@@ -70,47 +76,89 @@ object EinsatzNotificationHelper {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 if (alarmManager.canScheduleExactAlarms()) {
-                    alarmManager.setExactAndAllowWhileIdle(
-                        AlarmManager.RTC_WAKEUP,
-                        targetMillis,
-                        pendingIntent
-                    )
+                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, targetMillis, pendingIntent)
                 } else {
-                    alarmManager.setAndAllowWhileIdle(
-                        AlarmManager.RTC_WAKEUP,
-                        targetMillis,
-                        pendingIntent
-                    )
+                    alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, targetMillis, pendingIntent)
                 }
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    targetMillis,
-                    pendingIntent
-                )
             } else {
-                alarmManager.set(AlarmManager.RTC_WAKEUP, targetMillis, pendingIntent)
+                alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, targetMillis, pendingIntent)
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            try {
-                alarmManager.set(AlarmManager.RTC_WAKEUP, targetMillis, pendingIntent)
-            } catch (ex: Exception) {
-                ex.printStackTrace()
+        }
+    }
+
+    fun scheduleOneHourBeforeReminder(context: Context, einsatz: Einsatz) {
+        if (einsatz.datumMillis <= 0L || einsatz.abZeit.isBlank()) return
+
+        val timeParts = einsatz.abZeit.split(":")
+        if (timeParts.size < 2) return
+
+        val hour = timeParts[0].trim().toIntOrNull() ?: return
+        val minute = timeParts[1].trim().toIntOrNull() ?: return
+
+        val calendar = Calendar.getInstance().apply {
+            timeInMillis = einsatz.datumMillis
+            set(Calendar.HOUR_OF_DAY, hour)
+            set(Calendar.MINUTE, minute)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            add(Calendar.HOUR_OF_DAY, -1) // 1 Hour Before Departure
+        }
+
+        val targetMillis = calendar.timeInMillis
+        if (targetMillis <= System.currentTimeMillis()) return
+
+        val intent = Intent(context, EinsatzReminderReceiver::class.java).apply {
+            putExtra("einsatz_id", einsatz.id)
+            putExtra("is_one_hour_before", true)
+            putExtra("datum_str", einsatz.datumStr)
+            putExtra("ab_zeit", einsatz.abZeit)
+            putExtra("ab_bhf", einsatz.abBahnhof)
+            putExtra("an_bhf", einsatz.anBahnhof)
+            putExtra("linie", einsatz.linie)
+            putExtra("tour_nr", einsatz.tourNr)
+        }
+
+        val alarmId = (einsatz.id * 10 + 2).toInt()
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            alarmId,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (alarmManager.canScheduleExactAlarms()) {
+                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, targetMillis, pendingIntent)
+                } else {
+                    alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, targetMillis, pendingIntent)
+                }
+            } else {
+                alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, targetMillis, pendingIntent)
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
     fun cancelReminder(context: Context, einsatzId: Long) {
-        val intent = Intent(context, EinsatzReminderReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            einsatzId.toInt(),
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        alarmManager.cancel(pendingIntent)
+
+        listOf(1, 2).forEach { subId ->
+            val intent = Intent(context, EinsatzReminderReceiver::class.java)
+            val alarmId = (einsatzId * 10 + subId).toInt()
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                alarmId,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            alarmManager.cancel(pendingIntent)
+        }
     }
 
     fun showNotification(

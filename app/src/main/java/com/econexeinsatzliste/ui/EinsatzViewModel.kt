@@ -180,13 +180,13 @@ class EinsatzViewModel(private val repository: EinsatzRepository) : ViewModel() 
                 val addedCount = repository.insertAll(confirmedList, _uiState.value.isAutoDeleteEnabled)
                 confirmedList.forEach { einsatz ->
                     if (einsatz.status != EinsatzStatus.ABGESCHLOSSEN) {
-                        EinsatzNotificationHelper.scheduleTourMorningReminder(context, einsatz)
+                        EinsatzNotificationHelper.scheduleAllReminders(context, einsatz)
                     }
                 }
                 _uiState.update { state ->
                     state.copy(
                         parsedPreviewList = null,
-                        userMessage = "$addedCount Einsatz/Einsätze hinzugefügt & Erinnerung (8 Uhr morgens) aktiviert!"
+                        userMessage = "$addedCount Einsatz/Einsätze hinzugefügt & Benachrichtigungen aktiviert!"
                     )
                 }
             } else {
@@ -206,7 +206,7 @@ class EinsatzViewModel(private val repository: EinsatzRepository) : ViewModel() 
                     it.copy(userMessage = "Einsatz abgeschlossen ➔ Ins Archiv verschoben!")
                 }
             } else {
-                EinsatzNotificationHelper.scheduleTourMorningReminder(context, updated)
+                EinsatzNotificationHelper.scheduleAllReminders(context, updated)
                 _uiState.update {
                     it.copy(userMessage = "Status geändert: ${newStatus.label}")
                 }
@@ -231,7 +231,7 @@ class EinsatzViewModel(private val repository: EinsatzRepository) : ViewModel() 
                 status = nextStatus
             )
             repository.updateEinsatz(updated, _uiState.value.isAutoDeleteEnabled)
-            EinsatzNotificationHelper.scheduleTourMorningReminder(context, updated)
+            EinsatzNotificationHelper.scheduleAllReminders(context, updated)
 
             val msg = if (isBackToOriginal)
                 "Einsatz auf Ursprungsdatum zurückgesetzt (Status: Offen)"
@@ -248,13 +248,13 @@ class EinsatzViewModel(private val repository: EinsatzRepository) : ViewModel() 
                 val id = repository.insertEinsatz(einsatz, _uiState.value.isAutoDeleteEnabled)
                 val created = einsatz.copy(id = id)
                 if (created.status != EinsatzStatus.ABGESCHLOSSEN) {
-                    EinsatzNotificationHelper.scheduleTourMorningReminder(context, created)
+                    EinsatzNotificationHelper.scheduleAllReminders(context, created)
                 }
                 _uiState.update { it.copy(userMessage = "Einsatz hinzugefügt!") }
             } else {
                 repository.updateEinsatz(einsatz, _uiState.value.isAutoDeleteEnabled)
                 if (einsatz.status != EinsatzStatus.ABGESCHLOSSEN) {
-                    EinsatzNotificationHelper.scheduleTourMorningReminder(context, einsatz)
+                    EinsatzNotificationHelper.scheduleAllReminders(context, einsatz)
                 } else {
                     EinsatzNotificationHelper.cancelReminder(context, einsatz.id)
                 }

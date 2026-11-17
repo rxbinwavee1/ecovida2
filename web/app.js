@@ -528,7 +528,7 @@ function requestNotificationPermission() {
     Notification.requestPermission().then(permission => {
       if (permission === 'granted') {
         checkNotificationPermission();
-        alert('Erinnerungen für iPhone / Safari aktiviert!');
+        alert('Erinnerungen (8:00 Uhr morgens & 1 Std. vor Abfahrt) für iPhone / Safari aktiviert!');
       } else {
         alert('Benachrichtigungen wurden im Browser abgelehnt.');
       }
