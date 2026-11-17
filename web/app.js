@@ -18,6 +18,14 @@ document.addEventListener('DOMContentLoaded', () => {
   registerServiceWorker();
   checkNotificationPermission();
   renderApp();
+
+  setTimeout(() => {
+    const splash = document.getElementById('splash-overlay');
+    if (splash) {
+      splash.classList.add('fade-out');
+      setTimeout(() => { splash.style.display = 'none'; }, 500);
+    }
+  }, 1200);
 });
 
 // Theme Management

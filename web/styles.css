@@ -14,6 +14,8 @@
   --border-color: #334155;
   --error: #EF4444;
   --shadow: rgba(0, 0, 0, 0.4);
+  --emerald: #10B981;
+  --amber: #F59E0B;
 }
 
 body.light-theme {
@@ -49,6 +51,78 @@ body {
   display: flex;
   justify-content: center;
   padding: 12px;
+}
+
+/* Splash Screen Overlay */
+.splash-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #090D16;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.splash-overlay.fade-out {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.splash-content {
+  text-align: center;
+  animation: splashScale 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.splash-logo-container {
+  width: 120px;
+  height: 120px;
+  background-color: #111827;
+  border-radius: 28px;
+  padding: 16px;
+  margin: 0 auto 20px auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.splash-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.splash-content h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin: 0 0 6px 0;
+}
+
+.splash-subtitle {
+  font-size: 0.95rem;
+  color: #94A3B8;
+  margin: 0;
+}
+
+.splash-footer {
+  position: absolute;
+  bottom: 36px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #38BDF8;
+  text-align: center;
+}
+
+@keyframes splashScale {
+  0% { transform: scale(0.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 .app-container {
@@ -204,7 +278,6 @@ body {
   gap: 6px;
   overflow-x: auto;
   padding-bottom: 4px;
-
 }
 
 .chip {
@@ -298,6 +371,7 @@ body {
 .status-ABGESCHLOSSEN { background-color: #E8F5E9; color: #2E7D32; }
 .status-ABGEBROCHEN { background-color: #FFEBEE; color: #C62828; }
 .status-VERSCHOBEN { background-color: #FFF3E0; color: #E65100; }
+.status-AUSGEFALLEN { background-color: #FEE2E2; color: #DC2626; }
 
 .route-box {
   background-color: var(--surface-color);
@@ -337,6 +411,7 @@ body {
   font-weight: 600;
   background-color: var(--surface-color);
   border: 1px solid var(--border-color);
+  cursor: pointer;
 }
 
 .pill-honorar {
