@@ -16,9 +16,18 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class EinsatzViewModel(private val repository: EinsatzRepository) : ViewModel() {
+class EinsatzViewModel(
+    private val repository: EinsatzRepository,
+    context: Context
+) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(EinsatzUiState())
+    private val prefs = context.getSharedPreferences("econex_prefs", Context.MODE_PRIVATE)
+
+    private val _uiState = MutableStateFlow(
+        EinsatzUiState(
+            isAutoDeleteEnabled = prefs.getBoolean("is_auto_delete_enabled", true)
+        )
+    )
     val uiState: StateFlow<EinsatzUiState> = _uiState.asStateFlow()
 
     init {
@@ -57,6 +66,7 @@ class EinsatzViewModel(private val repository: EinsatzRepository) : ViewModel() 
     fun toggleAutoDelete() {
         _uiState.update { state ->
             val nextState = !state.isAutoDeleteEnabled
+            prefs.edit().putBoolean("is_auto_delete_enabled", nextState).apply()
             state.copy(
                 isAutoDeleteEnabled = nextState,
                 userMessage = if (nextState) "30-Tage Auto-Löschung aktiviert ⏱️" else "30-Tage Auto-Löschung deaktiviert ⏸️"
@@ -300,7 +310,7 @@ class EinsatzViewModel(private val repository: EinsatzRepository) : ViewModel() 
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             val repository = EinsatzRepository(context)
-            return EinsatzViewModel(repository) as T
+            return EinsatzViewModel(repository, context) as T
         }
     }
 }

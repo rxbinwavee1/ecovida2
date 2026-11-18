@@ -14,14 +14,14 @@ import com.econexeinsatzliste.data.Einsatz
 import java.util.Calendar
 
 object EinsatzNotificationHelper {
-    const val CHANNEL_ID = "econex_einsatz_reminders"
+    const val CHANNEL_ID = "econex_einsatz_reminders_v2"
     private const val CHANNEL_NAME = "Einsatz-Erinnerungen"
 
     fun createNotificationChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val importance = NotificationManager.IMPORTANCE_HIGH
             val channel = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, importance).apply {
-                description = "Erinnerungen am Tag der Tour (8 Uhr & 1 Std. vor Abfahrt)"
+                description = "Erinnerungen am Vortag um 18 Uhr & 3 Std. vor Abfahrt"
                 enableVibration(true)
             }
             val notificationManager =
@@ -31,19 +31,22 @@ object EinsatzNotificationHelper {
     }
 
     /**
-     * Schedules both 8:00 AM morning reminder and 1 hour before departure reminder.
+     * Schedules both:
+     * 1) Day BEFORE shift at 18:00 (6:00 PM)
+     * 2) 3 hours BEFORE departure time on shift date
      */
     fun scheduleAllReminders(context: Context, einsatz: Einsatz) {
-        scheduleTourMorningReminder(context, einsatz)
-        scheduleOneHourBeforeReminder(context, einsatz)
+        scheduleDayBeforeReminder(context, einsatz)
+        scheduleThreeHoursBeforeReminder(context, einsatz)
     }
 
-    fun scheduleTourMorningReminder(context: Context, einsatz: Einsatz) {
+    fun scheduleDayBeforeReminder(context: Context, einsatz: Einsatz) {
         if (einsatz.datumMillis <= 0L) return
 
         val calendar = Calendar.getInstance().apply {
             timeInMillis = einsatz.datumMillis
-            set(Calendar.HOUR_OF_DAY, 8)  // 8:00 AM on shift date
+            add(Calendar.DAY_OF_YEAR, -1) // Day before shift
+            set(Calendar.HOUR_OF_DAY, 18)  // 18:00 (6 PM)
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
@@ -54,7 +57,7 @@ object EinsatzNotificationHelper {
 
         val intent = Intent(context, EinsatzReminderReceiver::class.java).apply {
             putExtra("einsatz_id", einsatz.id)
-            putExtra("is_one_hour_before", false)
+            putExtra("reminder_type", "DAY_BEFORE")
             putExtra("datum_str", einsatz.datumStr)
             putExtra("ab_zeit", einsatz.abZeit)
             putExtra("ab_bhf", einsatz.abBahnhof)
@@ -64,31 +67,10 @@ object EinsatzNotificationHelper {
         }
 
         val alarmId = (einsatz.id * 10 + 1).toInt()
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            alarmId,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                if (alarmManager.canScheduleExactAlarms()) {
-                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, targetMillis, pendingIntent)
-                } else {
-                    alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, targetMillis, pendingIntent)
-                }
-            } else {
-                alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, targetMillis, pendingIntent)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        setAlarm(context, alarmId, targetMillis, intent)
     }
 
-    fun scheduleOneHourBeforeReminder(context: Context, einsatz: Einsatz) {
+    fun scheduleThreeHoursBeforeReminder(context: Context, einsatz: Einsatz) {
         if (einsatz.datumMillis <= 0L || einsatz.abZeit.isBlank()) return
 
         val timeParts = einsatz.abZeit.split(":")
@@ -103,7 +85,7 @@ object EinsatzNotificationHelper {
             set(Calendar.MINUTE, minute)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
-            add(Calendar.HOUR_OF_DAY, -1) // 1 Hour Before Departure
+            add(Calendar.HOUR_OF_DAY, -3) // 3 Hours Before Departure
         }
 
         val targetMillis = calendar.timeInMillis
@@ -111,7 +93,7 @@ object EinsatzNotificationHelper {
 
         val intent = Intent(context, EinsatzReminderReceiver::class.java).apply {
             putExtra("einsatz_id", einsatz.id)
-            putExtra("is_one_hour_before", true)
+            putExtra("reminder_type", "THREE_HOURS_BEFORE")
             putExtra("datum_str", einsatz.datumStr)
             putExtra("ab_zeit", einsatz.abZeit)
             putExtra("ab_bhf", einsatz.abBahnhof)
@@ -121,6 +103,10 @@ object EinsatzNotificationHelper {
         }
 
         val alarmId = (einsatz.id * 10 + 2).toInt()
+        setAlarm(context, alarmId, targetMillis, intent)
+    }
+
+    private fun setAlarm(context: Context, alarmId: Int, targetMillis: Long, intent: Intent) {
         val pendingIntent = PendingIntent.getBroadcast(
             context,
             alarmId,
@@ -142,6 +128,11 @@ object EinsatzNotificationHelper {
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            try {
+                alarmManager.set(AlarmManager.RTC_WAKEUP, targetMillis, pendingIntent)
+            } catch (ex: Exception) {
+                ex.printStackTrace()
+            }
         }
     }
 

@@ -8,7 +8,7 @@ class EinsatzReminderReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val id = intent.getLongExtra("einsatz_id", 0L)
-        val isOneHourBefore = intent.getBooleanExtra("is_one_hour_before", false)
+        val reminderType = intent.getStringExtra("reminder_type") ?: "DAY_BEFORE"
         val datumStr = intent.getStringExtra("datum_str") ?: ""
         val abZeit = intent.getStringExtra("ab_zeit") ?: ""
         val abBhf = intent.getStringExtra("ab_bhf") ?: ""
@@ -27,14 +27,16 @@ class EinsatzReminderReceiver : BroadcastReceiver() {
         if (tourNr.isNotBlank()) linieTourInfo.add("Tour $tourNr")
         val extraInfo = if (linieTourInfo.isNotEmpty()) " (${linieTourInfo.joinToString(", ")})" else ""
 
-        val title = if (isOneHourBefore) "⚡ In 1 Stunde: Einsatz-Abfahrt!" else "Erinnerung: Einsatz heute!"
-        val message = if (isOneHourBefore) {
-            "Abfahrt in 1 Std. um $abZeit Uhr: $routeText$extraInfo"
+        val isThreeHours = reminderType == "THREE_HOURS_BEFORE"
+
+        val title = if (isThreeHours) "⚡ In 3 Stunden: Einsatz-Abfahrt!" else "Erinnerung: Einsatz morgen!"
+        val message = if (isThreeHours) {
+            "Abfahrt in 3 Std. um $abZeit Uhr: $routeText$extraInfo"
         } else {
-            "Heute ($datumStr) ab $abZeit Uhr: $routeText$extraInfo"
+            "Morgen ($datumStr) ab $abZeit Uhr: $routeText$extraInfo"
         }
 
-        val notifId = if (isOneHourBefore) (id * 10 + 2).toInt() else (id * 10 + 1).toInt()
+        val notifId = if (isThreeHours) (id * 10 + 2).toInt() else (id * 10 + 1).toInt()
 
         EinsatzNotificationHelper.showNotification(
             context = context,
