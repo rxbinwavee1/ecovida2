@@ -1,4 +1,4 @@
-const CACHE_NAME = 'econex-planer-v5';
+const CACHE_NAME = 'econex-planer-v6';
 const ASSETS = [
   './',
   './index.html',

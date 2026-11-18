@@ -26,6 +26,10 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => { splash.style.display = 'none'; }, 500);
     }
   }, 1200);
+
+  // Periodically check shift reminders
+  checkShiftReminders();
+  setInterval(checkShiftReminders, 60000);
 });
 
 // Theme Management
@@ -93,6 +97,7 @@ function saveData() {
   cleanup30DaysOld();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(einsatze));
   renderApp();
+  checkShiftReminders();
 }
 
 function cleanup30DaysOld() {
@@ -480,7 +485,7 @@ function saveReschedule() {
         const isBackToOriginal = (formattedGermanDate === origStr || d.getTime() === origMillis);
         item.datumStr = formattedGermanDate;
         item.datumMillis = d.getTime();
-        // If current status is not already AUSGEFALLEN, toggle to VERSCHOBEN / OFFEN
+
         if (item.status !== 'AUSGEFALLEN') {
           item.status = isBackToOriginal ? 'OFFEN' : 'VERSCHOBEN';
         }
@@ -528,6 +533,7 @@ function requestNotificationPermission() {
     Notification.requestPermission().then(permission => {
       if (permission === 'granted') {
         checkNotificationPermission();
+        sendIosTestNotification();
         alert('Erinnerungen (Vortag 18:00 Uhr & 3 Std. vor Abfahrt) für iPhone / Safari aktiviert!');
       } else {
         alert('Benachrichtigungen wurden im Browser abgelehnt.');
@@ -538,9 +544,73 @@ function requestNotificationPermission() {
   }
 }
 
+function sendIosTestNotification() {
+  triggerNotification("Econex Planer aktiviert! 🔔", "Erinnerungen für deine Einsätze sind auf dem iPhone aktiv.");
+}
+
+function checkShiftReminders() {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+  const now = new Date();
+  const nowMs = now.getTime();
+
+  einsatze.forEach(item => {
+    if (item.status === 'ABGESCHLOSSEN' || item.status === 'ABGEBROCHEN') return;
+    if (!item.datumMillis) return;
+
+    // 1: Day before shift at 18:00
+    const dayBefore = new Date(item.datumMillis);
+    dayBefore.setDate(dayBefore.getDate() - 1);
+    dayBefore.setHours(18, 0, 0, 0);
+    const dayBeforeMs = dayBefore.getTime();
+
+    // 2: 3 hours before departure
+    let threeHoursBeforeMs = 0;
+    if (item.abZeit) {
+      const parts = item.abZeit.split(':');
+      if (parts.length >= 2) {
+        const h = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10);
+        const shiftTime = new Date(item.datumMillis);
+        shiftTime.setHours(h, m, 0, 0);
+        threeHoursBeforeMs = shiftTime.getTime() - (3 * 60 * 60 * 1000);
+      }
+    }
+
+    const key1 = `notif_vortag_${item.id}`;
+    const key2 = `notif_3h_${item.id}`;
+
+    if (nowMs >= dayBeforeMs && nowMs < (dayBeforeMs + 30 * 60 * 1000) && !localStorage.getItem(key1)) {
+      localStorage.setItem(key1, 'sent');
+      triggerNotification("Erinnerung: Einsatz morgen!", `Morgen (${item.datumStr}) ab ${item.abZeit || '--:--'} Uhr: ${item.abBahnhof || ''} ➔ ${item.anBahnhof || ''}`);
+    }
+
+    if (threeHoursBeforeMs > 0 && nowMs >= threeHoursBeforeMs && nowMs < (threeHoursBeforeMs + 30 * 60 * 1000) && !localStorage.getItem(key2)) {
+      localStorage.setItem(key2, 'sent');
+      triggerNotification("⚡ In 3 Stunden: Einsatz-Abfahrt!", `Abfahrt in 3 Std. um ${item.abZeit || '--:--'} Uhr: ${item.abBahnhof || ''} ➔ ${item.anBahnhof || ''}`);
+    }
+  });
+}
+
+function triggerNotification(title, body) {
+  const options = {
+    body: body,
+    icon: "apple-touch-icon.png",
+    badge: "icon-192.png"
+  };
+
+  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.ready.then(reg => {
+      reg.showNotification(title, options);
+    });
+  } else if ('Notification' in window) {
+    new Notification(title, options);
+  }
+}
+
 function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=5').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=6').then(reg => {
       reg.update();
     }).catch(e => console.log(e));
   }
