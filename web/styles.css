@@ -139,6 +139,16 @@ body {
   100% { transform: translateY(0); opacity: 1; }
 }
 
+@keyframes flyOutZoom {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(4); opacity: 0; }
+}
+
+.splash-overlay.fly-out {
+  animation: flyOutZoom 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  pointer-events: none;
+}
+
 .app-container {
   width: 100%;
   max-width: 480px;

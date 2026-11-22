@@ -42,51 +42,64 @@ import kotlin.math.roundToInt
 fun SplashScreen(
     onSplashFinished: () -> Unit
 ) {
-    // Animations for Logo
+    // Stage 1: Intro (Fade In & Bounce)
     val logoScale = remember { Animatable(0.4f) }
     val logoAlpha = remember { Animatable(0f) }
-
-    // Animations for Text (Slide up and fade in)
     val textOffsetY = remember { Animatable(80f) }
     val textAlpha = remember { Animatable(0f) }
 
+    // Stage 2: Outro (Zoom Out / "Flying out of screen")
+    val globalScale = remember { Animatable(1f) }
+    val globalAlpha = remember { Animatable(1f) }
+
     LaunchedEffect(Unit) {
-        // 1. Logo fades in and scales up with a spring effect
+        // --- PHASE 1: INTRO (Bounce in) ---
         launch {
             logoAlpha.animateTo(
                 targetValue = 1f,
-                animationSpec = tween(durationMillis = 600, easing = FastOutSlowInEasing)
+                animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing)
             )
         }
         launch {
             logoScale.animateTo(
                 targetValue = 1f,
-                animationSpec = spring(
-                    dampingRatio = 0.55f, // Bouncy!
-                    stiffness = Spring.StiffnessLow
-                )
+                animationSpec = spring(dampingRatio = 0.55f, stiffness = Spring.StiffnessLow)
             )
         }
 
-        // Wait a tiny bit for the logo bounce to start
-        delay(250)
+        delay(200)
 
-        // 2. Text slides up and fades in
         launch {
             textAlpha.animateTo(
                 targetValue = 1f,
-                animationSpec = tween(durationMillis = 600, easing = FastOutSlowInEasing)
+                animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing)
             )
         }
         launch {
             textOffsetY.animateTo(
                 targetValue = 0f,
-                animationSpec = tween(durationMillis = 600, easing = FastOutSlowInEasing)
+                animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing)
             )
         }
 
-        // Hold the screen so the user can enjoy the animation
-        delay(1400)
+        // Hold the screen to read
+        delay(900)
+
+        // --- PHASE 2: OUTRO (Zoom out & fly into the app) ---
+        launch {
+            globalAlpha.animateTo(
+                targetValue = 0f,
+                animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing)
+            )
+        }
+        launch {
+            globalScale.animateTo(
+                targetValue = 4.0f, // Zooms out massively towards the user / out of screen
+                animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing)
+            )
+        }
+
+        delay(350)
         onSplashFinished()
     }
 
@@ -96,60 +109,69 @@ fun SplashScreen(
             .background(Color(0xFF090D16)),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+        // Wrapper for the Outro Zoom
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .scale(globalScale.value)
+                .alpha(globalAlpha.value),
+            contentAlignment = Alignment.Center
         ) {
-            // Animated Logo
-            Surface(
-                shape = RoundedCornerShape(28.dp),
-                color = Color(0xFF111827),
-                shadowElevation = 12.dp,
-                modifier = Modifier
-                    .scale(logoScale.value)
-                    .alpha(logoAlpha.value)
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                    contentDescription = "Econex Planer Logo",
-                    modifier = Modifier
-                        .size(130.dp)
-                        .padding(12.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Animated Text Block
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .offset { IntOffset(0, textOffsetY.value.roundToInt()) }
-                    .alpha(textAlpha.value)
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = "Econex Planer",
-                    style = MaterialTheme.typography.headlineMedium.copy(fontSize = 30.sp),
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
+                // Animated Logo
+                Surface(
+                    shape = RoundedCornerShape(28.dp),
+                    color = Color(0xFF111827),
+                    shadowElevation = 12.dp,
+                    modifier = Modifier
+                        .scale(logoScale.value)
+                        .alpha(logoAlpha.value)
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                        contentDescription = "Econex Planer Logo",
+                        modifier = Modifier
+                            .size(130.dp)
+                            .padding(12.dp)
+                    )
+                }
 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-                Text(
-                    text = "Einsatz- & Dienstplaner",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF94A3B8)
-                )
+                // Animated Text Block
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .offset { IntOffset(0, textOffsetY.value.roundToInt()) }
+                        .alpha(textAlpha.value)
+                ) {
+                    Text(
+                        text = "Econex Planer",
+                        style = MaterialTheme.typography.headlineMedium.copy(fontSize = 30.sp),
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
 
-                Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
 
-                Text(
-                    text = "created by rxbin_.wave",
-                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF38BDF8),
-                    textAlign = TextAlign.Center
-                )
+                    Text(
+                        text = "Einsatz- & Dienstplaner",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color(0xFF94A3B8)
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Text(
+                        text = "created by rxbin_.wave",
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF38BDF8),
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
         }
     }

@@ -22,10 +22,10 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     const splash = document.getElementById('splash-overlay');
     if (splash) {
-      splash.classList.add('fade-out');
-      setTimeout(() => { splash.style.display = 'none'; }, 500);
+      splash.classList.add('fly-out');
+      setTimeout(() => { splash.style.display = 'none'; }, 400);
     }
-  }, 1200);
+  }, 1600);
 
   // Periodically check shift reminders
   checkShiftReminders();
