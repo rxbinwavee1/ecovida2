@@ -76,7 +76,6 @@ body {
 
 .splash-content {
   text-align: center;
-  animation: splashScale 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .splash-logo-container {
@@ -90,6 +89,18 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+
+  /* Logo Anim: Scale & Fade in */
+  animation: logoBounceIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  opacity: 0;
+}
+
+.splash-text-container {
+  /* Text Anim: Slide up & Fade in delayed */
+  animation: textSlideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation-delay: 0.25s;
+  opacity: 0;
+  transform: translateY(40px);
 }
 
 .splash-logo {
@@ -118,9 +129,14 @@ body {
   color: #38BDF8;
 }
 
-@keyframes splashScale {
-  0% { transform: scale(0.6); opacity: 0; }
+@keyframes logoBounceIn {
+  0% { transform: scale(0.4); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes textSlideUp {
+  0% { transform: translateY(40px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
 }
 
 .app-container {
