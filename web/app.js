@@ -30,6 +30,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Periodically check shift reminders
   checkShiftReminders();
   setInterval(checkShiftReminders, 60000);
+
+  // Close menus when clicking outside
+  document.addEventListener('click', () => {
+    closeAllMenus();
+  });
 });
 
 // Theme Management
@@ -232,7 +237,16 @@ function renderList() {
           <div class="date-badge">📅 ${item.datumStr || 'Kein Datum'}</div>
           <span class="status-chip status-${item.status}" onclick="cycleStatus('${item.id}')">${getStatusLabel(item.status)}</span>
         </div>
-        <button class="icon-btn danger" onclick="deleteItem('${item.id}')">🗑️</button>
+        <div class="card-actions">
+          <button class="icon-btn" onclick="toggleMenu(event, '${item.id}')" style="font-weight: bold; padding: 0 8px;">⋮</button>
+          <div id="menu-${item.id}" class="dropdown-menu" style="display: none;">
+            <button class="dropdown-item" onclick="exportToCalendar('${item.id}')" style="color: var(--primary);">🗓️ In Kalender exportieren</button>
+            <button class="dropdown-item" onclick="openRescheduleModal('${item.id}')">📅 Datum verschieben</button>
+            <button class="dropdown-item" onclick="rescheduleOutage('${item.id}')" style="color: var(--amber);">⚠️ Fahrt ausgefallen (Nacherhebung)</button>
+            <button class="dropdown-item" onclick="cancelShift('${item.id}')" style="color: var(--error);">🚫 Fahrt abbrechen</button>
+            <button class="dropdown-item" onclick="deleteItem('${item.id}')" style="color: var(--error);">🗑️ Löschen</button>
+          </div>
+        </div>
       </div>
       <div class="route-box">
         <div class="station-col">
@@ -252,10 +266,6 @@ function renderList() {
         ${item.linie ? `<span class="pill" style="color: var(--primary); font-weight: bold;">Linie: ${item.linie}</span>` : ''}
         ${bsText ? `<span class="pill" style="color: ${bsText === 'Zählung' ? 'var(--emerald)' : 'var(--amber)'}; font-weight: bold;">${bsText}</span>` : ''}
         ${item.betragEuro ? `<span class="pill pill-honorar">Honorar: ${parseFloat(item.betragEuro).toFixed(2).replace('.', ',')} €</span>` : ''}
-        <button class="pill" onclick="exportToCalendar('${item.id}')" style="color: var(--primary);">🗓️ In Kalender</button>
-        <button class="pill" onclick="openRescheduleModal('${item.id}')">📅 Verschieben</button>
-        <button class="pill" onclick="rescheduleOutage('${item.id}')" style="color: var(--amber);">⚠️ Ausgefallen (Nacherhebung)</button>
-        <button class="pill" onclick="cancelShift('${item.id}')" style="color: var(--error);">🚫 Abbrechen</button>
       </div>
     `;
 
@@ -571,6 +581,20 @@ END:VCALENDAR`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+}
+
+function toggleMenu(event, id) {
+  event.stopPropagation();
+  const menu = document.getElementById('menu-' + id);
+  const isShowing = menu.style.display === 'flex';
+  closeAllMenus();
+  if (!isShowing) {
+    menu.style.display = 'flex';
+  }
+}
+
+function closeAllMenus() {
+  document.querySelectorAll('.dropdown-menu').forEach(m => m.style.display = 'none');
 }
 
 function checkNotificationPermission() {
