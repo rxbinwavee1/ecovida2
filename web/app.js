@@ -238,13 +238,13 @@ function renderList() {
         <div class="station-col">
           <span class="label">Abfahrt</span>
           <span class="time">${item.abZeit || '--:--'}</span>
-          <span class="name">${item.abBahnhof || 'Unbekannt'}</span>
+          <span class="name ${item.abBahnhof ? 'clickable-station' : ''}" onclick="openMaps('${item.abBahnhof}')">${item.abBahnhof || 'Unbekannt'}</span>
         </div>
         <span>➔</span>
         <div class="station-col">
           <span class="label">Ankunft</span>
           <span class="time">${item.anZeit || '--:--'}</span>
-          <span class="name">${item.anBahnhof || 'Unbekannt'}</span>
+          <span class="name ${item.anBahnhof ? 'clickable-station' : ''}" onclick="openMaps('${item.anBahnhof}')">${item.anBahnhof || 'Unbekannt'}</span>
         </div>
       </div>
       <div class="pills-row">
@@ -252,6 +252,7 @@ function renderList() {
         ${item.linie ? `<span class="pill" style="color: var(--primary); font-weight: bold;">Linie: ${item.linie}</span>` : ''}
         ${bsText ? `<span class="pill" style="color: ${bsText === 'Zählung' ? 'var(--emerald)' : 'var(--amber)'}; font-weight: bold;">${bsText}</span>` : ''}
         ${item.betragEuro ? `<span class="pill pill-honorar">Honorar: ${parseFloat(item.betragEuro).toFixed(2).replace('.', ',')} €</span>` : ''}
+        <button class="pill" onclick="exportToCalendar('${item.id}')" style="color: var(--primary);">🗓️ In Kalender</button>
         <button class="pill" onclick="openRescheduleModal('${item.id}')">📅 Verschieben</button>
         <button class="pill" onclick="rescheduleOutage('${item.id}')" style="color: var(--amber);">⚠️ Ausgefallen (Nacherhebung)</button>
         <button class="pill" onclick="cancelShift('${item.id}')" style="color: var(--error);">🚫 Abbrechen</button>
@@ -519,6 +520,57 @@ function setStatusFilter(status) {
 function onSearchInput(val) {
   searchQuery = val;
   renderList();
+}
+
+function openMaps(station) {
+  if (station && station !== 'Unbekannt') {
+    window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(station), '_blank');
+  }
+}
+
+function exportToCalendar(id) {
+  const item = einsatze.find(i => i.id === id);
+  if (!item || !item.datumMillis) return;
+
+  const date = new Date(item.datumMillis);
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+
+  const parseTime = (timeStr) => {
+    if(!timeStr) return "000000";
+    const parts = timeStr.split(':');
+    if(parts.length >= 2) {
+      return String(parts[0]).padStart(2, '0') + String(parts[1]).padStart(2, '0') + "00";
+    }
+    return "000000";
+  };
+
+  const startTime = `${yyyy}${mm}${dd}T${parseTime(item.abZeit)}`;
+  const endTime = `${yyyy}${mm}${dd}T${parseTime(item.anZeit)}`;
+
+  const summary = `Econex Tour: ${item.tourNr} (${item.linie})`;
+  const loc = `${item.abBahnhof} -> ${item.anBahnhof}`;
+
+  const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+DTSTART:${startTime}
+DTEND:${endTime}
+SUMMARY:${summary}
+LOCATION:${loc}
+DESCRIPTION:Econex Einsatz\\nLinie: ${item.linie}\\nTour: ${item.tourNr}\\nHonorar: ${item.betragEuro} €
+END:VEVENT
+END:VCALENDAR`;
+
+  const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `Econex_Einsatz_${item.datumStr.replace(/[^a-zA-Z0-9]/g, '')}.ics`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 
 function checkNotificationPermission() {

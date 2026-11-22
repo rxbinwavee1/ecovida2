@@ -48,6 +48,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.provider.CalendarContract
+import androidx.compose.material.icons.filled.Event
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -177,6 +183,21 @@ fun EinsatzCard(
                         expanded = menuExpanded,
                         onDismissRequest = { menuExpanded = false }
                     ) {
+                        val localContext = LocalContext.current
+                        DropdownMenuItem(
+                            text = { Text("In Kalender exportieren") },
+                            onClick = {
+                                menuExpanded = false
+                                exportToCalendar(localContext, einsatz)
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Event,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        )
                         DropdownMenuItem(
                             text = { Text("Datum verschieben") },
                             onClick = {
@@ -279,12 +300,14 @@ fun EinsatzCard(
                             textDecoration = if (isCompleted) TextDecoration.LineThrough else TextDecoration.None
                         )
                     }
+                    val localContext = LocalContext.current
                     Text(
                         text = einsatz.abBahnhof.ifBlank { "Unbekannter Ab-Bhf" },
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurface,
-                        textDecoration = if (isCompleted) TextDecoration.LineThrough else TextDecoration.None
+                        textDecoration = if (isCompleted) TextDecoration.LineThrough else TextDecoration.None,
+                        modifier = Modifier.clickable { openMaps(localContext, einsatz.abBahnhof) }
                     )
                 }
 
@@ -318,12 +341,14 @@ fun EinsatzCard(
                             textDecoration = if (isCompleted) TextDecoration.LineThrough else TextDecoration.None
                         )
                     }
+                    val localContext = LocalContext.current
                     Text(
                         text = einsatz.anBahnhof.ifBlank { "Unbekannter An-Bhf" },
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurface,
-                        textDecoration = if (isCompleted) TextDecoration.LineThrough else TextDecoration.None
+                        textDecoration = if (isCompleted) TextDecoration.LineThrough else TextDecoration.None,
+                        modifier = Modifier.clickable { openMaps(localContext, einsatz.anBahnhof) }
                     )
                 }
             }
@@ -414,6 +439,47 @@ fun EinsatzCard(
                 }
             }
         }
+    }
+}
+
+fun openMaps(context: Context, station: String) {
+    if (station.isBlank() || station == "Unbekannt") return
+    val encoded = Uri.encode(station)
+    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=$encoded"))
+    try {
+        context.startActivity(intent)
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+}
+
+fun exportToCalendar(context: Context, einsatz: Einsatz) {
+    val intent = Intent(Intent.ACTION_INSERT).apply {
+        data = CalendarContract.Events.CONTENT_URI
+        putExtra(CalendarContract.Events.TITLE, "Econex Tour: ${einsatz.tourNr} (${einsatz.linie})")
+        putExtra(CalendarContract.Events.EVENT_LOCATION, "${einsatz.abBahnhof} ➔ ${einsatz.anBahnhof}")
+        putExtra(CalendarContract.Events.DESCRIPTION, "Linie: ${einsatz.linie}\nTour: ${einsatz.tourNr}\nHonorar: ${einsatz.betragEuro} €")
+
+        val startCal = java.util.Calendar.getInstance().apply { timeInMillis = einsatz.datumMillis }
+        if (einsatz.abZeit.contains(":")) {
+            val parts = einsatz.abZeit.split(":")
+            startCal.set(java.util.Calendar.HOUR_OF_DAY, parts[0].toIntOrNull() ?: 0)
+            startCal.set(java.util.Calendar.MINUTE, parts[1].toIntOrNull() ?: 0)
+        }
+        putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, startCal.timeInMillis)
+
+        val endCal = java.util.Calendar.getInstance().apply { timeInMillis = einsatz.datumMillis }
+        if (einsatz.anZeit.contains(":")) {
+            val parts = einsatz.anZeit.split(":")
+            endCal.set(java.util.Calendar.HOUR_OF_DAY, parts[0].toIntOrNull() ?: 0)
+            endCal.set(java.util.Calendar.MINUTE, parts[1].toIntOrNull() ?: 0)
+        }
+        putExtra(CalendarContract.EXTRA_EVENT_END_TIME, endCal.timeInMillis)
+    }
+    try {
+        context.startActivity(intent)
+    } catch (e: Exception) {
+        e.printStackTrace()
     }
 }
 

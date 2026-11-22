@@ -422,6 +422,16 @@ body {
   font-weight: 500;
 }
 
+.clickable-station {
+  color: var(--primary);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.clickable-station:hover {
+  color: var(--primary-hover);
+}
+
 .pills-row {
   display: flex;
   gap: 6px;

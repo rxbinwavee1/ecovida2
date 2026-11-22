@@ -8,7 +8,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 
 class EinsatzRepository(context: Context) {
-    private val dbHelper = EconexDatabaseHelper(context.applicationContext)
+    private val appContext = context.applicationContext
+    private val dbHelper = EconexDatabaseHelper(appContext)
 
     private val _einsatzeFlow = MutableStateFlow<List<Einsatz>>(emptyList())
     val einsatzeFlow: StateFlow<List<Einsatz>> = _einsatzeFlow.asStateFlow()
@@ -25,6 +26,7 @@ class EinsatzRepository(context: Context) {
         }
         val list = dbHelper.getAllEinsatze(isAutoDeleteEnabled)
         _einsatzeFlow.value = list
+        com.econexeinsatzliste.widget.NextShiftWidgetProvider.updateAllWidgets(appContext)
     }
 
     suspend fun insertEinsatz(einsatz: Einsatz, isAutoDeleteEnabled: Boolean = true): Long = withContext(Dispatchers.IO) {
