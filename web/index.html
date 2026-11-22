@@ -156,6 +156,19 @@
     </div>
   </div>
 
+  <!-- Maps Selection Modal -->
+  <div id="maps-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <h3>Karten-App auswählen</h3>
+      <p style="font-size: 0.85rem; color: var(--text-sub);">Mit welcher App möchtest du den Bahnhof öffnen?</p>
+      <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+        <button class="btn-action btn-primary" onclick="openMapUrl('google')">🌍 Google Maps</button>
+        <button class="btn-action btn-secondary" onclick="openMapUrl('apple')" style="background-color: #000; color: #fff;">🗺️ Apple Karten</button>
+        <button class="btn-action btn-outlined" onclick="closeModal('maps-modal')" style="margin-top: 4px;">Abbrechen</button>
+      </div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>

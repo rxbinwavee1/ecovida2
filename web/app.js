@@ -532,10 +532,23 @@ function onSearchInput(val) {
   renderList();
 }
 
+let currentMapStation = '';
 function openMaps(station) {
   if (station && station !== 'Unbekannt') {
-    window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(station), '_blank');
+    currentMapStation = station;
+    document.getElementById('maps-modal').style.display = 'flex';
   }
+}
+
+function openMapUrl(provider) {
+  if (!currentMapStation) return;
+  const encoded = encodeURIComponent(currentMapStation);
+  if (provider === 'google') {
+    window.open('https://www.google.com/maps/search/?api=1&query=' + encoded, '_blank');
+  } else if (provider === 'apple') {
+    window.open('https://maps.apple.com/?q=' + encoded, '_blank');
+  }
+  closeModal('maps-modal');
 }
 
 function exportToCalendar(id) {
