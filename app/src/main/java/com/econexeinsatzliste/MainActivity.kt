@@ -11,8 +11,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.econexeinsatzliste.data.EinsatzStatus
 import com.econexeinsatzliste.ui.EinsatzAppScreen
 import com.econexeinsatzliste.ui.EinsatzViewModel
+import com.econexeinsatzliste.ui.components.ErheberPauseScreen
 import com.econexeinsatzliste.ui.components.SplashScreen
 import com.econexeinsatzliste.ui.theme.EconexEinsatzlisteTheme
 
@@ -30,6 +32,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val uiState by viewModel.uiState.collectAsState()
             var showSplash by remember { mutableStateOf(true) }
+            var showPauseScreen by remember { mutableStateOf(true) }
 
             EconexEinsatzlisteTheme(
                 darkTheme = uiState.isDarkTheme,
@@ -37,6 +40,14 @@ class MainActivity : ComponentActivity() {
             ) {
                 if (showSplash) {
                     SplashScreen(onSplashFinished = { showSplash = false })
+                } else if (showPauseScreen) {
+                    val allTimeEarnings = uiState.einsatze
+                        .filter { it.status != EinsatzStatus.ABGEBROCHEN }
+                        .sumOf { it.betragEuro }
+                    ErheberPauseScreen(
+                        totalEarnings = allTimeEarnings,
+                        onContinue = { showPauseScreen = false }
+                    )
                 } else {
                     EinsatzAppScreen(viewModel = viewModel)
                 }

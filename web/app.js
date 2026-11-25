@@ -140,6 +140,25 @@ function getBsLabel(bs) {
 function renderApp() {
   renderStats();
   renderList();
+  updatePauseScreen();
+}
+
+function updatePauseScreen() {
+  const allTimeSum = einsatze
+    .filter(i => i.status !== 'ABGEBROCHEN')
+    .reduce((sum, item) => sum + (parseFloat(item.betragEuro) || 0), 0);
+  const pauseVal = document.getElementById('pause-total-earnings');
+  if (pauseVal) {
+    pauseVal.textContent = allTimeSum.toFixed(2).replace('.', ',') + ' €';
+  }
+}
+
+function closePauseScreen() {
+  const pauseScreen = document.getElementById('pause-overlay');
+  if (pauseScreen) {
+    pauseScreen.style.opacity = '0';
+    setTimeout(() => { pauseScreen.style.display = 'none'; }, 400);
+  }
 }
 
 function renderStats() {

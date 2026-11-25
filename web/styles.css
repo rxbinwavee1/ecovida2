@@ -149,6 +149,66 @@ body {
   pointer-events: none;
 }
 
+/* Pause Overlay */
+.pause-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background-color: var(--bg-color);
+  z-index: 99990; /* below splash, above app */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  transition: opacity 0.4s ease;
+}
+
+.pause-content {
+  background-color: var(--surface-color);
+  border-radius: 24px;
+  padding: 32px 24px;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 10px 25px var(--shadow);
+}
+
+.pause-content h2 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin-bottom: 12px;
+  color: var(--text-main);
+}
+
+.pause-content p {
+  font-size: 0.95rem;
+  color: var(--text-sub);
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.pause-earnings-card {
+  background-color: var(--primary-container);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 32px;
+}
+
+.pause-earnings-card .label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--primary-container-text);
+  opacity: 0.8;
+  margin-bottom: 4px;
+}
+
+.pause-earnings-card .value {
+  display: block;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--primary-container-text);
+}
+
 .app-container {
   width: 100%;
   max-width: 480px;
